@@ -70,7 +70,7 @@ export default async function FollowUpsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            {overdueList.map((item) => (
+            {overdueList.map((item: any) => (
               <div key={item.id} className="bg-white p-4 rounded-xl border border-rose-200 space-y-2 shadow-xs">
                 <div className="flex justify-between items-start">
                   <Link href={`/schools/${item.school.id}`} className="font-bold text-slate-900 hover:text-blue-600">
@@ -104,7 +104,7 @@ export default async function FollowUpsPage() {
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            {dueTodayList.map((item) => (
+            {dueTodayList.map((item: any) => (
               <div key={item.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                 <div className="flex justify-between items-start">
                   <Link href={`/schools/${item.school.id}`} className="font-bold text-slate-900 hover:text-blue-600">
@@ -138,7 +138,7 @@ export default async function FollowUpsPage() {
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-            {upcomingList.map((item) => (
+            {upcomingList.map((item: any) => (
               <div key={item.id} className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
                 <div className="flex justify-between items-start">
                   <Link href={`/schools/${item.school.id}`} className="font-bold text-slate-900 hover:text-blue-600">

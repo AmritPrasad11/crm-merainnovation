@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 
     const csvRows = [
       headers.join(','),
-      ...schools.map((s) => {
+      ...schools.map((s: any) => {
         const contact = s.contacts[0];
         return [
           escapeCsv(s.name),

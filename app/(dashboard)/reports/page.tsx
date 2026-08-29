@@ -10,7 +10,7 @@ export default async function ReportsPage() {
   });
 
   const stageCounts: Record<string, number> = {};
-  schoolsByStage.forEach((item) => {
+  schoolsByStage.forEach((item: any) => {
     stageCounts[item.salesStage] = item._count.id;
   });
 
@@ -23,7 +23,7 @@ export default async function ReportsPage() {
   });
 
   const cityMap: Record<string, { city: string; state: string; count: number; converted: number; stemLabs: number; roboticsLabs: number }> = {};
-  allSchools.forEach((s) => {
+  allSchools.forEach((s: any) => {
     const key = `${s.city}_${s.state}`;
     if (!cityMap[key]) {
       cityMap[key] = { city: s.city, state: s.state, count: 0, converted: 0, stemLabs: 0, roboticsLabs: 0 };
@@ -42,7 +42,7 @@ export default async function ReportsPage() {
   });
 
   const userStats = await Promise.all(
-    users.map(async (u) => {
+    users.map(async (u: any) => {
       const assignedCount = await db.school.count({ where: { assignedUserId: u.id, archived: false } });
       const activitiesCount = await db.activity.count({ where: { userId: u.id } });
       const completedFollowUps = await db.followUp.count({ where: { assignedUserId: u.id, status: 'COMPLETED' } });

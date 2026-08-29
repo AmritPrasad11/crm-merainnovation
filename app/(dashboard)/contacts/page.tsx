@@ -108,7 +108,7 @@ export default async function ContactsPage({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {contacts.map((contact) => (
+                {contacts.map((contact: any) => (
                   <tr key={contact.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="p-4">
                       <div className="font-bold text-slate-900 flex items-center gap-2">

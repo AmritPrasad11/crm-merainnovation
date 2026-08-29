@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   });
 
   const stageCounts: Record<string, number> = {};
-  schoolsByStage.forEach((item) => {
+  schoolsByStage.forEach((item: any) => {
     stageCounts[item.salesStage] = item._count.id;
   });
 
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {recentFollowUpsList.map((fu) => {
+                {recentFollowUpsList.map((fu: any) => {
                   const isOverdue = new Date(fu.dueDate) < startOfDay;
                   return (
                     <div
@@ -332,7 +332,7 @@ export default async function DashboardPage() {
               </p>
             ) : (
               <div className="space-y-3">
-                {recentActivities.map((act) => (
+                {recentActivities.map((act: any) => (
                   <div key={act.id} className="text-xs border-l-2 border-blue-500 pl-3 py-1 space-y-0.5">
                     <div className="flex items-center justify-between">
                       <Link
