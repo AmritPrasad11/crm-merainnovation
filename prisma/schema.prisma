@@ -1,0 +1,341 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  OUTREACH_USER
+}
+
+enum SalesStage {
+  NEW
+  CONTACTED
+  ENGAGED
+  INTERESTED
+  MEETING
+  PROPOSAL_SENT
+  MOU_SENT
+  MOU_SIGNED
+  CONVERTED
+  NOT_INTERESTED
+  REJECTED
+  NO_RESPONSE
+  INVALID_CONTACT
+}
+
+enum ActivityType {
+  CALL
+  MEETING
+  NOTE
+  FOLLOW_UP
+  PROPOSAL
+  MOU
+  STAGE_CHANGE
+  EMAIL_SENT
+  WHATSAPP_SENT
+  SYSTEM
+}
+
+enum FollowUpStatus {
+  PENDING
+  COMPLETED
+  RESCHEDULED
+  CANCELLED
+}
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  UNDER_REVIEW
+  ACCEPTED
+  REJECTED
+}
+
+enum MouStatus {
+  NOT_SENT
+  SENT
+  UNDER_REVIEW
+  SIGNED
+  REJECTED
+}
+
+enum Channel {
+  EMAIL
+  WHATSAPP
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  RUNNING
+  COMPLETED
+  PAUSED
+  CANCELLED
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  READ
+  FAILED
+  REPLIED
+}
+
+model User {
+  id                 String     @id @default(cuid())
+  name               String
+  email              String     @unique
+  passwordHash       String
+  role               Role       @default(OUTREACH_USER)
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  assignedSchools    School[]   @relation("AssignedUser")
+  createdSchools     School[]   @relation("CreatedUser")
+  activities         Activity[]
+  followUps          FollowUp[] @relation("AssignedFollowUpUser")
+  createdFollowUps   FollowUp[] @relation("CreatedFollowUpUser")
+  proposals          Proposal[]
+  mous               Mou[]
+  campaigns          Campaign[]
+  auditLogs          AuditLog[]
+}
+
+model School {
+  id                 String       @id @default(cuid())
+  name               String
+  normalizedName     String
+  city               String
+  state              String
+  address            String?
+  website            String?
+  board              String?
+  schoolType         String?
+  studentStrength    Int?
+  hasStemLab         Boolean      @default(false)
+  hasRoboticsLab     Boolean      @default(false)
+  primaryEmail       String?
+  primaryPhone       String?
+  primaryWhatsapp    String?
+  source             String?
+  salesStage         SalesStage   @default(NEW)
+  leadScore          Int          @default(0)
+  archived           Boolean      @default(false)
+  
+  assignedUserId     String?
+  assignedUser       User?        @relation("AssignedUser", fields: [assignedUserId], references: [id])
+  createdById        String?
+  createdBy          User?        @relation("CreatedUser", fields: [createdById], references: [id])
+  
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  lastContactedAt    DateTime?
+  nextFollowUpAt     DateTime?
+  notes              String?
+
+  contacts           Contact[]
+  activities         Activity[]
+  followUps          FollowUp[]
+  proposals          Proposal[]
+  mous               Mou[]
+  campaignRecipients CampaignRecipient[]
+  messageLogs        MessageLog[]
+
+  @@index([salesStage])
+  @@index([city, state])
+  @@index([normalizedName])
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  schoolId    String
+  school      School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name        String
+  designation String
+  email       String?
+  phone       String?
+  whatsapp    String?
+  isPrimary   Boolean  @default(false)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  campaignRecipients CampaignRecipient[]
+  messageLogs        MessageLog[]
+
+  @@index([schoolId])
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  schoolId    String
+  school      School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?        @relation(fields: [userId], references: [id])
+  type        ActivityType
+  title       String
+  description String?
+  metadata    String?
+  createdAt   DateTime     @default(now())
+
+  @@index([schoolId])
+  @@index([createdAt])
+}
+
+model FollowUp {
+  id             String         @id @default(cuid())
+  schoolId       String
+  school         School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  assignedUserId String?
+  assignedUser   User?          @relation("AssignedFollowUpUser", fields: [assignedUserId], references: [id])
+  createdById    String?
+  createdBy      User?          @relation("CreatedFollowUpUser", fields: [createdById], references: [id])
+  title          String
+  dueDate        DateTime
+  status         FollowUpStatus @default(PENDING)
+  completedAt    DateTime?
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([schoolId])
+  @@index([dueDate, status])
+}
+
+model Proposal {
+  id          String         @id @default(cuid())
+  schoolId    String
+  school      School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title       String
+  version     String         @default("1.0")
+  amount      Float?
+  status      ProposalStatus @default(DRAFT)
+  documentUrl String?
+  notes       String?
+  createdById String?
+  createdBy   User?          @relation(fields: [createdById], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([schoolId])
+}
+
+model Mou {
+  id          String    @id @default(cuid())
+  schoolId    String
+  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  mouVersion  String    @default("1.0")
+  status      MouStatus @default(NOT_SENT)
+  documentUrl String?
+  sentDate    DateTime?
+  signedDate  DateTime?
+  notes       String?
+  createdById String?
+  createdBy   User?     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([schoolId])
+}
+
+model Template {
+  id            String     @id @default(cuid())
+  name          String
+  channel       Channel
+  subject       String?
+  content       String
+  variables     String?    // Comma-separated variable list e.g. "school_name,contact_name"
+  metaTemplateId String?   // Official Meta WhatsApp Business Template Name/ID
+  metaStatus    String?    // APPROVED, PENDING, REJECTED
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  campaigns     Campaign[]
+}
+
+model Campaign {
+  id               String            @id @default(cuid())
+  name             String
+  channel          Channel
+  templateId       String
+  template         Template          @relation(fields: [templateId], references: [id])
+  targetStage      SalesStage?
+  targetCity       String?
+  targetState      String?
+  targetBoard      String?
+  status           CampaignStatus    @default(DRAFT)
+  totalRecipients  Int               @default(0)
+  sentCount        Int               @default(0)
+  deliveredCount   Int               @default(0)
+  readCount        Int               @default(0)
+  failedCount      Int               @default(0)
+  createdById      String?
+  createdBy        User?             @relation(fields: [createdById], references: [id])
+  scheduledAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  recipients       CampaignRecipient[]
+  messageLogs      MessageLog[]
+}
+
+model CampaignRecipient {
+  id               String        @id @default(cuid())
+  campaignId       String
+  campaign         Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  schoolId         String
+  school           School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  contactId        String?
+  contact          Contact?      @relation(fields: [contactId], references: [id])
+  recipientAddress String        // Email or Phone
+  status           MessageStatus @default(QUEUED)
+  sentAt           DateTime?
+  deliveredAt      DateTime?
+  readAt           DateTime?
+  error            String?
+  createdAt        DateTime      @default(now())
+
+  @@index([campaignId])
+}
+
+model MessageLog {
+  id            String        @id @default(cuid())
+  schoolId      String
+  school        School        @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact?      @relation(fields: [contactId], references: [id])
+  campaignId    String?
+  campaign      Campaign?     @relation(fields: [campaignId], references: [id])
+  channel       Channel
+  direction     String        @default("OUTBOUND") // OUTBOUND, INBOUND
+  sender        String
+  recipient     String
+  subject       String?
+  content       String
+  status        MessageStatus @default(SENT)
+  externalId    String?       // Meta Message ID or Email Provider Message ID
+  createdAt     DateTime      @default(now())
+
+  @@index([schoolId])
+  @@index([channel])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  action        String
+  entity        String
+  entityId      String
+  previousValue String?
+  newValue      String?
+  createdAt     DateTime @default(now())
+
+  @@index([entity, entityId])
+}
