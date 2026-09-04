@@ -21,6 +21,14 @@ export function Icon({ d, className = 'w-4 h-4', ...props }: { d: string | strin
   );
 }
 
+export const Menu = (props: any) => (
+  <Icon d={['M4 12h16', 'M4 6h16', 'M4 18h16']} {...props} />
+);
+
+export const X = (props: any) => (
+  <Icon d={['M18 6 6 18', 'm6 6 12 12']} {...props} />
+);
+
 export const Trash = (props: any) => (
   <Icon d={['M3 6h18', 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6', 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2']} {...props} />
 );

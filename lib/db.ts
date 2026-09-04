@@ -1,6 +1,7 @@
+import { PrismaClient } from '@prisma/client';
 import { normalizeText, calculateLeadScore } from './utils';
 
-// Global in-memory storage for development fallback before Prisma client is generated
+// Global in-memory storage for development fallback when DATABASE_URL is missing in dev
 const inMemoryStore: {
   users: any[];
   schools: any[];
@@ -27,7 +28,7 @@ const inMemoryStore: {
     },
     {
       id: 'usr_amrit',
-      name: 'Amrit Singh',
+      name: 'Amrit',
       email: 'amrit@merainnovation.com',
       passwordHash: 'f4f107f9c8f0e5728a38a0a8677c7f39572b6b553e19488a4b64e528a475d654',
       role: 'OUTREACH_USER',
@@ -217,7 +218,7 @@ const inMemoryStore: {
   auditLogs: [],
 };
 
-// Fallback Prisma-like wrapper
+// Fallback Prisma-like mock store for local development only
 const fallbackDb = {
   user: {
     findUnique: async ({ where }: any) =>
@@ -605,21 +606,53 @@ const fallbackDb = {
   },
 };
 
-let dbInstance: any = fallbackDb;
+// Standard Prisma singleton pattern for Next.js development hot-reloads
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+};
 
-try {
-  const { PrismaClient } = require('@prisma/client');
-  const globalForPrisma = globalThis as unknown as { prisma: any };
-  if (globalForPrisma.prisma) {
-    dbInstance = globalForPrisma.prisma;
-  } else {
-    const prisma = new PrismaClient({ log: ['error'] });
-    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
-    dbInstance = prisma;
+function initializeDatabase() {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+
+  if (isProduction) {
+    if (!hasDatabaseUrl) {
+      throw new Error(
+        'DATABASE_URL environment variable is missing. Production environment requires a valid PostgreSQL connection string.'
+      );
+    }
+    try {
+      const client = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
+      globalForPrisma.prisma = client;
+      return client;
+    } catch (err: any) {
+      throw new Error(
+        `Failed to initialize Prisma Client in production environment: ${err?.message || err}`
+      );
+    }
   }
-} catch {
-  // Use fallback store if @prisma/client package is not installed yet
-  dbInstance = fallbackDb;
+
+  // Development / Test environment
+  if (hasDatabaseUrl) {
+    try {
+      const client = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
+      if (process.env.NODE_ENV !== 'production') {
+        globalForPrisma.prisma = client;
+      }
+      return client;
+    } catch (err: any) {
+      console.warn(
+        '[CRM Database] PrismaClient initialization failed in development, falling back to mock store:',
+        err?.message || err
+      );
+      return fallbackDb;
+    }
+  }
+
+  console.warn(
+    '[CRM Database] DATABASE_URL is missing in local development. Using in-memory fallback store.'
+  );
+  return fallbackDb;
 }
 
-export const db = dbInstance;
+export const db: PrismaClient = initializeDatabase() as unknown as PrismaClient;

@@ -35,7 +35,7 @@ export default function TemplateManagerClient({ initialTemplates }: { initialTem
   const [testContact, setTestContact] = useState('Dr. R. K. Sharma');
   const [testCity, setTestCity] = useState('Jaipur');
   const [testDesignation, setTestDesignation] = useState('Principal');
-  const [testUser, setTestUser] = useState('Amrit Singh');
+  const [testUser, setTestUser] = useState('Amrit');
 
   const filteredTemplates = templates.filter((t) => t.channel === activeChannel);
 

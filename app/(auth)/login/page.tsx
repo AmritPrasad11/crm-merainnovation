@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building2, ShieldCheck, Lock, Mail, ArrowRight, Sparkles } from '@/components/Icons';
+import { Lock, Mail, ArrowRight } from '@/components/Icons';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,7 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [seedMessage, setSeedMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,28 +38,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleSeedDatabase = async () => {
-    setLoading(true);
-    setSeedMessage(null);
-    try {
-      const res = await fetch('/api/seed', { method: 'POST' });
-      const data = await res.json();
-      if (res.ok) {
-        setSeedMessage('Database initialized! Admin: admin@merainnovation.com / Admin@123456');
-        setEmail('admin@merainnovation.com');
-        setPassword('Admin@123456');
-      } else {
-        setError(data.error || 'Seed failed');
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Seed failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden text-slate-100">
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden text-slate-100 font-sans">
       {/* Background Glow */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
 
@@ -68,7 +47,7 @@ export default function LoginPage() {
         <div className="inline-flex items-center justify-center p-2 bg-white rounded-2xl mb-4 shadow-xl shadow-blue-500/10 border border-slate-700">
           <img src="/logo.jpg" alt="Mera Innovation" className="w-16 h-16 object-contain rounded-xl" />
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white font-sans">
+        <h1 className="text-3xl font-extrabold tracking-tight text-white">
           Mera Innovation CRM
         </h1>
         <p className="mt-2 text-sm text-slate-400">
@@ -82,13 +61,6 @@ export default function LoginPage() {
             <div className="mb-5 p-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm rounded-xl flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               {error}
-            </div>
-          )}
-
-          {seedMessage && (
-            <div className="mb-5 p-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs rounded-xl flex items-start gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-              <div>{seedMessage}</div>
             </div>
           )}
 
@@ -146,17 +118,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t border-slate-800/80 text-center">
-            <button
-              onClick={handleSeedDatabase}
-              disabled={loading}
-              className="text-xs text-blue-400 hover:text-blue-300 inline-flex items-center gap-1.5 font-medium transition-colors"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Initialize Database & Seed Admin Account</span>
-            </button>
-          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-slate-500">

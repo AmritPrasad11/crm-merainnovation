@@ -13,6 +13,11 @@ export async function POST() {
 
 async function handleSeed() {
   try {
+    const userCount = await db.user.count();
+    if (process.env.NODE_ENV === 'production' && userCount > 0) {
+      return NextResponse.json({ error: 'Database seeding is disabled in production as active accounts already exist.' }, { status: 403 });
+    }
+
     // 1. Create or get Admin user
     let admin = await db.user.findUnique({
       where: { email: 'admin@merainnovation.com' },
@@ -39,7 +44,7 @@ async function handleSeed() {
       const passwordHash = await hashPassword('Outreach@123456');
       outreachUser = await db.user.create({
         data: {
-          name: 'Amrit Singh',
+          name: 'Amrit',
           email: 'amrit@merainnovation.com',
           passwordHash,
           role: 'OUTREACH_USER',
