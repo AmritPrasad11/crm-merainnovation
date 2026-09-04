@@ -29,6 +29,14 @@ export function ensureLogoCopied() {
       fs.unlinkSync(prismaConfigPath);
       console.log('Removed auto-generated Prisma 7 config file (prisma.config.ts)');
     }
+
+    // Remove middleware.ts if proxy.ts exists to prevent Next.js 16 dual file error
+    const middlewarePath = path.join(process.cwd(), 'middleware.ts');
+    const proxyPath = path.join(process.cwd(), 'proxy.ts');
+    if (fs.existsSync(middlewarePath) && fs.existsSync(proxyPath)) {
+      fs.unlinkSync(middlewarePath);
+      console.log('Removed middleware.ts in favor of Next.js 16 proxy.ts');
+    }
   } catch (err) {
     console.error('Logo copy error:', err);
   }

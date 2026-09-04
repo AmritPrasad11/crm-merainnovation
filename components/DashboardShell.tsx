@@ -3,22 +3,30 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Building2 } from '@/components/Icons';
+import {
+  Menu,
+  X,
+  LayoutDashboard,
+  Building2,
+  Users,
+  CalendarClock,
+  Send,
+  MessageSquare,
+  FileText,
+  FileCheck,
+  LayoutTemplate,
+  BarChart3,
+  UserCheck,
+  Settings,
+} from '@/components/Icons';
 import UserMenu from '@/components/UserMenu';
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: any;
-}
 
 interface DashboardShellProps {
   user: any;
-  navItems: NavItem[];
   children: React.ReactNode;
 }
 
-export default function DashboardShell({ user, navItems, children }: DashboardShellProps) {
+export default function DashboardShell({ user, children }: DashboardShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,10 +37,26 @@ export default function DashboardShell({ user, navItems, children }: DashboardSh
   }, [pathname]);
 
   const toggleSidebar = () => {
-    // Toggle sidebar on desktop and drawer on mobile
     setSidebarOpen((prev) => !prev);
     setMobileMenuOpen((prev) => !prev);
   };
+
+  const navItems = [
+    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Schools', href: '/schools', icon: Building2 },
+    { label: 'Contacts', href: '/contacts', icon: Users },
+    { label: 'Follow-ups', href: '/follow-ups', icon: CalendarClock },
+    { label: 'Campaigns', href: '/campaigns', icon: Send },
+    { label: 'Messages', href: '/messages', icon: MessageSquare },
+    { label: 'Proposals', href: '/proposals', icon: FileText },
+    { label: 'MOU', href: '/mou', icon: FileCheck },
+    { label: 'Templates', href: '/templates', icon: LayoutTemplate },
+    { label: 'Reports', href: '/reports', icon: BarChart3 },
+    ...(user?.role === 'ADMIN'
+      ? [{ label: 'Users', href: '/users', icon: UserCheck }]
+      : []),
+    { label: 'Settings', href: '/settings', icon: Settings },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
@@ -45,11 +69,7 @@ export default function DashboardShell({ user, navItems, children }: DashboardSh
             aria-label="Toggle navigation menu"
             className="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer flex items-center justify-center"
           >
-            {mobileMenuOpen || sidebarOpen ? (
-              <Menu className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            <Menu className="w-5 h-5" />
           </button>
 
           <Link href="/dashboard" className="flex items-center gap-2.5 group">

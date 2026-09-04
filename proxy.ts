@@ -42,7 +42,7 @@ async function verifyToken(token: string, secret: string) {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -63,7 +63,6 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // If user is accessing login and has valid session, redirect to dashboard
   if (isAuthPage) {
     if (session) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
@@ -71,23 +70,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Unauthenticated user attempting to access protected routes
   if (!session) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Root path redirect
   if (pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Admin-only route guard
   if (pathname.startsWith('/users') && session.role !== 'ADMIN') {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
 }
+
+export default proxy;
 
 export const config = {
   matcher: ['/((?!api/auth/login|_next/static|_next/image|favicon.ico).*)'],
