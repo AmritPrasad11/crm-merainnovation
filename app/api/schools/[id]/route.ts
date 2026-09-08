@@ -40,9 +40,10 @@ export async function GET(
     }
 
     let archivedBy = null;
-    if (school.archivedById) {
+    const schAny = school as any;
+    if (schAny.archivedById) {
       archivedBy = await db.user.findUnique({
-        where: { id: school.archivedById },
+        where: { id: schAny.archivedById },
         select: { id: true, name: true },
       });
     }
@@ -112,7 +113,7 @@ export async function PUT(
       );
     }
 
-    const activitiesCount = await db.activity.count({ where: { schoolId: id, archived: false } });
+    const activitiesCount = await db.activity.count({ where: { schoolId: id, school: { archived: false } } as any });
     const targetStage = salesStage || school.salesStage;
 
     const calculatedScore = calculateLeadScore({

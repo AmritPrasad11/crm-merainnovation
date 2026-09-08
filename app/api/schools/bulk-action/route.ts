@@ -66,13 +66,13 @@ export async function POST(request: Request) {
               archived: true,
             },
           });
-          await tx.contact.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.activity.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.followUp.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.proposal.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.mou.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.campaignRecipient.updateMany({ where: { schoolId: id }, data: { archived: true } });
-          await tx.messageLog.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.contact.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.activity.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.followUp.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.proposal.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.mou.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.campaignRecipient.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
+          await tx.messageLog.updateMany({ where: { schoolId: id }, data: { archived: true } as any });
         }
       });
     } else {

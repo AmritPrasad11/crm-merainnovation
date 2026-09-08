@@ -95,7 +95,7 @@ export async function POST(request: Request) {
           primaryPhone: rec.contactPhone || null,
           primaryWhatsapp: rec.contactPhone || null,
           source: 'CSV Initial Import',
-          salesStage: initialStage,
+          salesStage: initialStage as any,
           leadScore,
           assignedUserId: assignedUser,
           createdById: currentUser.id,

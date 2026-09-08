@@ -41,13 +41,13 @@ export async function POST(
 
     // 2. Unarchive all child entities belonging to this school safely
     const childEntities = [
-      () => db.contact.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.activity.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.followUp.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.proposal.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.mou.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.campaignRecipient.updateMany({ where: { schoolId: id }, data: { archived: false } }),
-      () => db.messageLog.updateMany({ where: { schoolId: id }, data: { archived: false } }),
+      () => db.contact.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.activity.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.followUp.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.proposal.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.mou.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.campaignRecipient.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
+      () => db.messageLog.updateMany({ where: { schoolId: id }, data: { archived: false } as any }),
     ];
 
     for (const updateFn of childEntities) {
@@ -68,7 +68,7 @@ export async function POST(
           title: 'School and related records unarchived',
           description: `Restored to active CRM operations by ${currentUser.name}.`,
           archived: false,
-        },
+        } as any,
       });
     } catch (actErr) {
       console.warn('[Unarchive] System activity log creation skipped or failed:', actErr);
