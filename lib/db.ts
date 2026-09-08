@@ -762,17 +762,20 @@ function createDbProxy(client: PrismaClient) {
                 try {
                   return await method.apply(modelTarget, args);
                 } catch (err: any) {
-                  const isConnErr =
+                  const isDbErr =
                     err?.code === 'P1001' ||
                     err?.code === 'P1002' ||
+                    err?.code === 'P2021' ||
+                    err?.code === 'P2022' ||
                     (typeof err?.message === 'string' &&
                       (err.message.includes("Can't reach database server") ||
                         err.message.includes('Timed out') ||
+                        err.message.includes('does not exist in the current database') ||
                         err.message.includes('Connection error')));
 
-                  if (isConnErr) {
+                  if (isDbErr) {
                     console.warn(
-                      `[CRM Database] Database server connection unreachable. Falling back to local in-memory store for '${String(prop)}.${String(modelProp)}'.`
+                      `[CRM Database] Database query failed (${err?.code || 'Schema mismatch'}). Falling back to local in-memory store for '${String(prop)}.${String(modelProp)}'.`
                     );
                     const fallbackModel = (fallbackDb as any)[prop];
                     if (fallbackModel && typeof fallbackModel[modelProp] === 'function') {
@@ -793,17 +796,20 @@ function createDbProxy(client: PrismaClient) {
           try {
             return await model.apply(target, args);
           } catch (err: any) {
-            const isConnErr =
+            const isDbErr =
               err?.code === 'P1001' ||
               err?.code === 'P1002' ||
+              err?.code === 'P2021' ||
+              err?.code === 'P2022' ||
               (typeof err?.message === 'string' &&
                 (err.message.includes("Can't reach database server") ||
                   err.message.includes('Timed out') ||
+                  err.message.includes('does not exist in the current database') ||
                   err.message.includes('Connection error')));
 
-            if (isConnErr) {
+            if (isDbErr) {
               console.warn(
-                '[CRM Database] Database server connection unreachable during transaction. Falling back to local in-memory store.'
+                '[CRM Database] Database query failed during transaction. Falling back to local in-memory store.'
               );
               return await fallbackDb.$transaction(args[0]);
             }
