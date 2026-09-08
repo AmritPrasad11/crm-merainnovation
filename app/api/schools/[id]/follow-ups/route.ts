@@ -41,7 +41,7 @@ export async function POST(
       data: {
         schoolId: id,
         userId: user.id,
-        type: 'FOLLOW_UP',
+        type: 'FOLLOW_UP' as any,
         title: `Scheduled follow-up: ${title}`,
         description: `Due on ${new Date(dueDate).toLocaleDateString()}`,
       },
@@ -94,7 +94,7 @@ export async function PATCH(
       data: {
         schoolId: id,
         userId: user.id,
-        type: 'FOLLOW_UP',
+        type: 'FOLLOW_UP' as any,
         title: `Follow-up marked as ${status}: ${followUp.title}`,
         description: notes || undefined,
       },

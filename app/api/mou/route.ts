@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       data: {
         schoolId,
         userId: user.id,
-        type: 'MOU',
+        type: 'MOU' as any,
         title: `MOU version ${mouVersion} dispatched`,
         description: `Status: ${status}`,
       },
@@ -128,7 +128,7 @@ export async function PATCH(request: Request) {
       data: {
         schoolId: updatedMou.schoolId,
         userId: user.id,
-        type: 'MOU',
+        type: 'MOU' as any,
         title: `MOU marked as ${status}`,
         description: status === 'SIGNED' ? 'MOU executed and signed!' : undefined,
       },

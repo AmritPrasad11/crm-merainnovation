@@ -42,6 +42,8 @@ enum ActivityType {
   MEETING
   NOTE
   PROPOSAL
+  MOU
+  FOLLOW_UP
   STAGE_CHANGE
   SYSTEM
 }
