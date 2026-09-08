@@ -33,6 +33,10 @@ export const Trash = (props: any) => (
   <Icon d={['M3 6h18', 'M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6', 'M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2']} {...props} />
 );
 
+export const Archive = (props: any) => (
+  <Icon d={['M21 8v13H3V8', 'M1 3h22v5H1z', 'M10 12h4']} {...props} />
+);
+
 export const Download = (props: any) => (
   <Icon d={['M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4', 'm7 10 5 5 5-5', 'M12 15V3']} {...props} />
 );
@@ -339,4 +343,8 @@ export const Server = (props: any) => (
 
 export const Database = (props: any) => (
   <Icon d={['M12 2c5.523 0 10 1.79 10 4s-4.477 4-10 4S2 8.21 2 6s4.477-4 10-4z', 'M21 12c0 2.21-4.477 4-10 4s-10-1.79-10-4', 'M21 18c0 2.21-4.477 4-10 4s-10-1.79-10-4', 'M3 6v12', 'M21 6v12']} {...props} />
+);
+
+export const RotateCcw = (props: any) => (
+  <Icon d={['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5']} {...props} />
 );

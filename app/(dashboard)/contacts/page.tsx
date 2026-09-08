@@ -12,14 +12,20 @@ export default async function ContactsPage({
   const search = params.q || '';
   const designationFilter = params.designation || '';
 
-  const where: any = {};
+  const where: any = {
+    school: { archived: false },
+  };
 
   if (search) {
-    where.OR = [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-      { phone: { contains: search } },
-      { school: { name: { contains: search, mode: 'insensitive' } } },
+    where.AND = [
+      {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search } },
+          { school: { name: { contains: search, mode: 'insensitive' } } },
+        ],
+      },
     ];
   }
 
@@ -42,7 +48,7 @@ export default async function ContactsPage({
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Contacts Directory</h1>
         <p className="text-xs text-slate-500 mt-1">
-          Central management of school principals, directors, and lab coordinators.
+          Central management of active school principals, directors, and lab coordinators.
         </p>
       </div>
 
@@ -76,7 +82,7 @@ export default async function ContactsPage({
 
             <button
               type="submit"
-              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold transition-colors shrink-0"
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold transition-colors shrink-0 cursor-pointer"
             >
               Filter
             </button>
@@ -91,7 +97,7 @@ export default async function ContactsPage({
             <Users className="w-10 h-10 text-slate-300 mx-auto" />
             <h3 className="text-sm font-bold text-slate-700">No Contacts Found</h3>
             <p className="text-xs text-slate-500">
-              No school contacts match your search parameters.
+              No active school contacts match your search parameters.
             </p>
           </div>
         ) : (

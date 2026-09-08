@@ -24,6 +24,7 @@ import {
   Shield,
   Edit,
   ArrowUpRight,
+  Archive,
 } from '@/components/Icons';
 import {
   SALES_STAGE_PIPELINE,
@@ -33,6 +34,8 @@ import {
 } from '@/lib/types';
 import { formatDate, formatDateTime } from '@/lib/utils';
 import Link from 'next/link';
+import EditSchoolModal from '@/components/EditSchoolModal';
+import ArchiveSchoolModal from '@/components/ArchiveSchoolModal';
 
 interface SchoolDetailProps {
   school: any;
@@ -74,6 +77,11 @@ export default function SchoolDetailClient({
   const [fuDueDate, setFuDueDate] = useState('');
   const [fuAssignee, setFuAssignee] = useState(currentUserId);
   const [fuNotes, setFuNotes] = useState('');
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showArchiveModal, setShowArchiveModal] = useState(false);
+  const isAdmin = currentUserRole === 'ADMIN';
+  const canEdit = isAdmin || school.assignedUserId === currentUserId || school.createdById === currentUserId;
 
   const allStages = [...SALES_STAGE_PIPELINE, ...SALES_STAGE_OUTCOMES];
   const currentStageObj = allStages.find((s) => s.key === school.salesStage);
@@ -211,6 +219,24 @@ export default function SchoolDetailClient({
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {canEdit && (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Edit className="w-3.5 h-3.5 text-blue-600" />
+                <span>Edit Profile</span>
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setShowArchiveModal(true)}
+                className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Archive className="w-3.5 h-3.5 text-rose-600" />
+                <span>Archive School</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 setSelectedStage(school.salesStage);
@@ -904,6 +930,34 @@ export default function SchoolDetailClient({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit School Modal */}
+      {showEditModal && (
+        <EditSchoolModal
+          school={school}
+          users={allUsers}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={() => {
+            setShowEditModal(false);
+            router.refresh();
+          }}
+        />
+      )}
+
+      {/* Archive School Modal */}
+      {showArchiveModal && (
+        <ArchiveSchoolModal
+          school={school}
+          isOpen={showArchiveModal}
+          onClose={() => setShowArchiveModal(false)}
+          onSuccess={() => {
+            setShowArchiveModal(false);
+            router.push('/schools');
+            router.refresh();
+          }}
+        />
       )}
     </div>
   );

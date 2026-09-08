@@ -57,19 +57,15 @@ export async function POST(request: Request) {
           skippedCount++;
           continue;
         } else if (duplicateStrategy === 'UPDATE_EXISTING' && dupCheck.matchedSchool) {
-          // Update existing school
+          // Update existing school attributes safely (never overwrite existing sales stage or CRM history)
           const existingId = dupCheck.matchedSchool.id;
           await db.school.update({
             where: { id: existingId },
             data: {
-              board: rec.board || undefined,
-              schoolType: rec.schoolType || undefined,
-              studentStrength: rec.studentStrength ? parseInt(rec.studentStrength, 10) : undefined,
-              hasStemLab: rec.hasStemLab === 'true' || rec.hasStemLab === true || rec.hasStemLab === 'Yes',
-              hasRoboticsLab: rec.hasRoboticsLab === 'true' || rec.hasRoboticsLab === true || rec.hasRoboticsLab === 'Yes',
+              address: rec.address || undefined,
+              website: rec.website || undefined,
               primaryEmail: rec.contactEmail || undefined,
               primaryPhone: rec.contactPhone || undefined,
-              notes: rec.notes ? `[Import Update]: ${rec.notes}` : undefined,
             },
           });
           updatedCount++;
@@ -77,15 +73,13 @@ export async function POST(request: Request) {
         }
       }
 
-      // Create new school
+      // Create new school - ALWAYS starts as NOT_CONTACTED ("School added to CRM, no outreach activity performed yet")
       const normalizedName = normalizeText(schoolName);
-      const initialStage = rec.salesStage || 'NEW';
-      const hasStem = rec.hasStemLab === 'true' || rec.hasStemLab === true || rec.hasStemLab === 'Yes' || rec.hasStemLab === '1';
-      const hasRobo = rec.hasRoboticsLab === 'true' || rec.hasRoboticsLab === true || rec.hasRoboticsLab === 'Yes' || rec.hasRoboticsLab === '1';
+      const initialStage = 'NOT_CONTACTED';
 
       const leadScore = calculateLeadScore({
-        hasStemLab: hasStem,
-        hasRoboticsLab: hasRobo,
+        hasStemLab: false,
+        hasRoboticsLab: false,
         salesStage: initialStage,
       });
 
@@ -97,20 +91,14 @@ export async function POST(request: Request) {
           state,
           address: rec.address || null,
           website: rec.website || null,
-          board: rec.board || null,
-          schoolType: rec.schoolType || null,
-          studentStrength: rec.studentStrength ? parseInt(rec.studentStrength, 10) : null,
-          hasStemLab: hasStem,
-          hasRoboticsLab: hasRobo,
           primaryEmail: rec.contactEmail || null,
           primaryPhone: rec.contactPhone || null,
-          primaryWhatsapp: rec.contactWhatsapp || rec.contactPhone || null,
-          source: rec.source || 'CSV Batch Import',
+          primaryWhatsapp: rec.contactPhone || null,
+          source: 'CSV Initial Import',
           salesStage: initialStage,
           leadScore,
           assignedUserId: assignedUser,
           createdById: currentUser.id,
-          notes: rec.notes || null,
           contacts: rec.contactName
             ? {
                 create: [
@@ -119,7 +107,7 @@ export async function POST(request: Request) {
                     designation: rec.contactDesignation || 'Principal',
                     email: rec.contactEmail || null,
                     phone: rec.contactPhone || null,
-                    whatsapp: rec.contactWhatsapp || rec.contactPhone || null,
+                    whatsapp: rec.contactPhone || null,
                     isPrimary: true,
                   },
                 ],
@@ -130,7 +118,7 @@ export async function POST(request: Request) {
               {
                 userId: currentUser.id,
                 type: 'SYSTEM',
-                title: 'School record added via CSV batch import',
+                title: 'School record imported (Status: NOT_CONTACTED)',
               },
             ],
           },

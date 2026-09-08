@@ -57,6 +57,8 @@ const inMemoryStore: {
       salesStage: 'INTERESTED',
       leadScore: 65,
       archived: false,
+      archivedAt: null,
+      archivedById: null,
       assignedUserId: 'usr_amrit',
       createdById: 'usr_admin',
       createdAt: new Date(Date.now() - 7 * 86400000),
@@ -85,6 +87,8 @@ const inMemoryStore: {
       salesStage: 'PROPOSAL_SENT',
       leadScore: 85,
       archived: false,
+      archivedAt: null,
+      archivedById: null,
       assignedUserId: 'usr_amrit',
       createdById: 'usr_admin',
       createdAt: new Date(Date.now() - 10 * 86400000),
@@ -104,6 +108,7 @@ const inMemoryStore: {
       phone: '+91 98290 12345',
       whatsapp: '+91 98290 12345',
       isPrimary: true,
+      archived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -116,6 +121,7 @@ const inMemoryStore: {
       phone: '+91 731 290 9999',
       whatsapp: '+91 731 290 9999',
       isPrimary: true,
+      archived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -128,6 +134,7 @@ const inMemoryStore: {
       type: 'CALL',
       title: 'Initial phone call completed',
       description: 'Spoke with Dr. R. K. Sharma. Explained Mera Innovation STEM lab setup.',
+      archived: false,
       createdAt: new Date(Date.now() - 2 * 86400000),
     },
   ],
@@ -140,6 +147,7 @@ const inMemoryStore: {
       title: 'Send customized Robotics Lab proposal & brochure',
       dueDate: new Date(Date.now() + 86400000),
       status: 'PENDING',
+      archived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -151,6 +159,7 @@ const inMemoryStore: {
       title: 'Follow up on proposal review with Director Anjali Gupta',
       dueDate: new Date(),
       status: 'PENDING',
+      archived: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -198,6 +207,7 @@ const inMemoryStore: {
       content: 'Sent initial STEM lab brochure and introduction.',
       status: 'DELIVERED',
       externalId: 'msg_resend_9921',
+      archived: false,
       createdAt: new Date(Date.now() - 2 * 86400000),
     },
     {
@@ -212,6 +222,7 @@ const inMemoryStore: {
       content: 'Hello Anjali Gupta! Following up on the commercial proposal for DPS Indore.',
       status: 'READ',
       externalId: 'wamid.HBgLOTE3MzEyOTA5OTk5FQIAERgSRTI0RDAyMjQ1MTQ5NDBDMEI1AA==',
+      archived: false,
       createdAt: new Date(Date.now() - 1 * 86400000),
     },
   ],
@@ -220,6 +231,18 @@ const inMemoryStore: {
 
 // Fallback Prisma-like mock store for local development only
 const fallbackDb = {
+  $transaction: async (arg: any) => {
+    if (typeof arg === 'function') {
+      return await arg(fallbackDb);
+    }
+    if (Array.isArray(arg)) {
+      const results = [];
+      for (const item of arg) {
+        results.push(await item);
+      }
+      return results;
+    }
+  },
   user: {
     findUnique: async ({ where }: any) =>
       inMemoryStore.users.find(
@@ -230,8 +253,8 @@ const fallbackDb = {
       return result.map((u) => ({
         ...u,
         _count: {
-          assignedSchools: inMemoryStore.schools.filter((s) => s.assignedUserId === u.id).length,
-          followUps: inMemoryStore.followUps.filter((f) => f.assignedUserId === u.id && f.status === 'PENDING').length,
+          assignedSchools: inMemoryStore.schools.filter((s) => s.assignedUserId === u.id && !s.archived).length,
+          followUps: inMemoryStore.followUps.filter((f) => f.assignedUserId === u.id && f.status === 'PENDING' && !f.archived).length,
         },
       }));
     },
@@ -242,13 +265,14 @@ const fallbackDb = {
     },
   },
   school: {
-    findUnique: async ({ where, include }: any) => {
+    findUnique: async ({ where }: any) => {
       const s = inMemoryStore.schools.find((sch) => sch.id === where?.id);
       if (!s) return null;
       return {
         ...s,
         assignedUser: inMemoryStore.users.find((u) => u.id === s.assignedUserId) || null,
         createdBy: inMemoryStore.users.find((u) => u.id === s.createdById) || null,
+        archivedBy: inMemoryStore.users.find((u) => u.id === s.archivedById) || null,
         contacts: inMemoryStore.contacts.filter((c) => c.schoolId === s.id),
         activities: inMemoryStore.activities
           .filter((a) => a.schoolId === s.id)
@@ -262,7 +286,8 @@ const fallbackDb = {
       };
     },
     findMany: async (args?: any) => {
-      let list = inMemoryStore.schools.filter((s) => !s.archived);
+      const isArchivedTarget = args?.where?.archived === true;
+      let list = inMemoryStore.schools.filter((s) => (isArchivedTarget ? s.archived : !s.archived));
 
       if (args?.where?.OR) {
         const q = args.where.OR[0]?.name?.contains?.toLowerCase() || '';
@@ -288,6 +313,7 @@ const fallbackDb = {
       return list.map((s) => ({
         ...s,
         assignedUser: inMemoryStore.users.find((u) => u.id === s.assignedUserId) || null,
+        archivedBy: inMemoryStore.users.find((u) => u.id === s.archivedById) || null,
         contacts: inMemoryStore.contacts.filter((c) => c.schoolId === s.id && (args?.include?.contacts?.where?.isPrimary ? c.isPrimary : true)),
         _count: {
           contacts: inMemoryStore.contacts.filter((c) => c.schoolId === s.id).length,
@@ -295,10 +321,11 @@ const fallbackDb = {
         },
       }));
     },
-    groupBy: async ({ by }: any) => {
+    groupBy: async ({ by, where }: any) => {
+      const isArchivedTarget = where?.archived === true;
       const counts: Record<string, number> = {};
       inMemoryStore.schools.forEach((s) => {
-        if (!s.archived) {
+        if (isArchivedTarget ? s.archived : !s.archived) {
           counts[s.salesStage] = (counts[s.salesStage] || 0) + 1;
         }
       });
@@ -309,6 +336,7 @@ const fallbackDb = {
     },
     count: async ({ where }: any) => {
       if (where?.archived === false) return inMemoryStore.schools.filter((s) => !s.archived).length;
+      if (where?.archived === true) return inMemoryStore.schools.filter((s) => s.archived).length;
       return inMemoryStore.schools.length;
     },
     create: async ({ data }: any) => {
@@ -316,6 +344,9 @@ const fallbackDb = {
       const newSchool = {
         id: `sch_${Date.now()}`,
         ...schoolData,
+        archived: false,
+        archivedAt: null,
+        archivedById: null,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -323,19 +354,19 @@ const fallbackDb = {
 
       if (contacts?.create) {
         contacts.create.forEach((c: any) => {
-          inMemoryStore.contacts.push({ id: `cnt_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, ...c, createdAt: new Date(), updatedAt: new Date() });
+          inMemoryStore.contacts.push({ id: `cnt_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, archived: false, ...c, createdAt: new Date(), updatedAt: new Date() });
         });
       }
 
       if (activities?.create) {
         activities.create.forEach((a: any) => {
-          inMemoryStore.activities.push({ id: `act_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, ...a, createdAt: new Date() });
+          inMemoryStore.activities.push({ id: `act_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, archived: false, ...a, createdAt: new Date() });
         });
       }
 
       if (followUps?.create) {
         followUps.create.forEach((f: any) => {
-          inMemoryStore.followUps.push({ id: `fu_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, ...f, createdAt: new Date(), updatedAt: new Date() });
+          inMemoryStore.followUps.push({ id: `fu_${Date.now()}_${Math.random()}`, schoolId: newSchool.id, archived: false, ...f, createdAt: new Date(), updatedAt: new Date() });
         });
       }
 
@@ -352,6 +383,7 @@ const fallbackDb = {
         inMemoryStore.activities.push({
           id: `act_${Date.now()}`,
           schoolId: school.id,
+          archived: false,
           ...activities.create,
           createdAt: new Date(),
         });
@@ -359,35 +391,56 @@ const fallbackDb = {
 
       return school;
     },
+    delete: async ({ where }: any) => {
+      const index = inMemoryStore.schools.findIndex((s) => s.id === where.id);
+      if (index !== -1) {
+        const deleted = inMemoryStore.schools.splice(index, 1)[0];
+        return deleted;
+      }
+      return null;
+    },
   },
   contact: {
     findMany: async (args?: any) => {
       let list = [...inMemoryStore.contacts];
-      if (args?.where?.designation) {
-        list = list.filter((c) => c.designation === args.where.designation);
+      if (args?.where?.archived !== undefined) {
+        list = list.filter((c) => c.archived === args.where.archived);
       }
+      if (args?.where?.schoolId) list = list.filter((c) => c.schoolId === args.where.schoolId);
+      if (args?.where?.designation) list = list.filter((c) => c.designation === args.where.designation);
       return list.map((c) => ({
         ...c,
         school: inMemoryStore.schools.find((s) => s.id === c.schoolId) || { name: 'Unknown', city: '', state: '' },
       }));
     },
     create: async ({ data }: any) => {
-      const newContact = { id: `cnt_${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newContact = { id: `cnt_${Date.now()}`, archived: false, ...data, createdAt: new Date(), updatedAt: new Date() };
       inMemoryStore.contacts.push(newContact);
       return newContact;
     },
     updateMany: async ({ where, data }: any) => {
+      let count = 0;
       inMemoryStore.contacts.forEach((c) => {
-        if (c.schoolId === where.schoolId && where.isPrimary && c.isPrimary) {
-          c.isPrimary = data.isPrimary;
+        if (c.schoolId === where.schoolId) {
+          Object.assign(c, data);
+          count++;
         }
       });
-      return { count: 1 };
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.contacts.length;
+      inMemoryStore.contacts = inMemoryStore.contacts.filter((c) => c.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.contacts.length };
     },
   },
   activity: {
     findMany: async (args?: any) => {
       let list = [...inMemoryStore.activities];
+      if (args?.where?.archived !== undefined) {
+        list = list.filter((a) => a.archived === args.where.archived);
+      }
+      if (args?.where?.schoolId) list = list.filter((a) => a.schoolId === args.where.schoolId);
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
@@ -398,17 +451,33 @@ const fallbackDb = {
         user: inMemoryStore.users.find((u) => u.id === a.userId) || null,
       }));
     },
-    count: async ({ where }: any) => inMemoryStore.activities.filter((a) => a.schoolId === where?.schoolId).length,
+    count: async ({ where }: any) => inMemoryStore.activities.filter((a) => a.schoolId === where?.schoolId && !a.archived).length,
     create: async ({ data }: any) => {
-      const newAct = { id: `act_${Date.now()}`, ...data, createdAt: new Date() };
+      const newAct = { id: `act_${Date.now()}`, archived: false, ...data, createdAt: new Date() };
       inMemoryStore.activities.push(newAct);
       return newAct;
+    },
+    updateMany: async ({ where, data }: any) => {
+      let count = 0;
+      inMemoryStore.activities.forEach((a) => {
+        if (a.schoolId === where.schoolId) {
+          Object.assign(a, data);
+          count++;
+        }
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.activities.length;
+      inMemoryStore.activities = inMemoryStore.activities.filter((a) => a.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.activities.length };
     },
   },
   followUp: {
     count: async ({ where }: any) => {
       return inMemoryStore.followUps.filter((f) => {
-        if (f.status !== where?.status) return false;
+        if (f.archived) return false;
+        if (where?.status && f.status !== where.status) return false;
         if (where?.dueDate?.lt) return new Date(f.dueDate) < new Date(where.dueDate.lt);
         if (where?.dueDate?.gte && where?.dueDate?.lte) {
           const d = new Date(f.dueDate);
@@ -419,6 +488,7 @@ const fallbackDb = {
     },
     findMany: async (args?: any) => {
       let list = inMemoryStore.followUps.filter((f) => {
+        if (args?.where?.archived !== undefined && f.archived !== args.where.archived) return false;
         if (args?.where?.status && f.status !== args.where.status) return false;
         if (args?.where?.dueDate?.lt) return new Date(f.dueDate) < new Date(args.where.dueDate.lt);
         if (args?.where?.dueDate?.gt) return new Date(f.dueDate) > new Date(args.where.dueDate.gt);
@@ -441,7 +511,7 @@ const fallbackDb = {
       }));
     },
     create: async ({ data }: any) => {
-      const newFu = { id: `fu_${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newFu = { id: `fu_${Date.now()}`, archived: false, ...data, createdAt: new Date(), updatedAt: new Date() };
       inMemoryStore.followUps.push(newFu);
       return newFu;
     },
@@ -450,10 +520,26 @@ const fallbackDb = {
       if (fu) Object.assign(fu, data, { updatedAt: new Date() });
       return fu;
     },
+    updateMany: async ({ where, data }: any) => {
+      let count = 0;
+      inMemoryStore.followUps.forEach((f) => {
+        if (f.schoolId === where.schoolId) {
+          Object.assign(f, data);
+          count++;
+        }
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.followUps.length;
+      inMemoryStore.followUps = inMemoryStore.followUps.filter((f) => f.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.followUps.length };
+    },
   },
   proposal: {
     findMany: async (args?: any) => {
       let list = [...inMemoryStore.proposals];
+      if (args?.where?.archived !== undefined) list = list.filter((p) => p.archived === args.where.archived);
       if (args?.where?.schoolId) list = list.filter((p) => p.schoolId === args.where.schoolId);
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -465,7 +551,7 @@ const fallbackDb = {
       }));
     },
     create: async ({ data }: any) => {
-      const newProp = { id: `prop_${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newProp = { id: `prop_${Date.now()}`, archived: false, ...data, createdAt: new Date(), updatedAt: new Date() };
       inMemoryStore.proposals.push(newProp);
       return newProp;
     },
@@ -474,10 +560,26 @@ const fallbackDb = {
       if (p) Object.assign(p, data, { updatedAt: new Date() });
       return p;
     },
+    updateMany: async ({ where, data }: any) => {
+      let count = 0;
+      inMemoryStore.proposals.forEach((p) => {
+        if (p.schoolId === where.schoolId) {
+          Object.assign(p, data);
+          count++;
+        }
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.proposals.length;
+      inMemoryStore.proposals = inMemoryStore.proposals.filter((p) => p.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.proposals.length };
+    },
   },
   mou: {
     findMany: async (args?: any) => {
       let list = [...inMemoryStore.mous];
+      if (args?.where?.archived !== undefined) list = list.filter((m) => m.archived === args.where.archived);
       if (args?.where?.schoolId) list = list.filter((m) => m.schoolId === args.where.schoolId);
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -489,7 +591,7 @@ const fallbackDb = {
       }));
     },
     create: async ({ data }: any) => {
-      const newMou = { id: `mou_${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
+      const newMou = { id: `mou_${Date.now()}`, archived: false, ...data, createdAt: new Date(), updatedAt: new Date() };
       inMemoryStore.mous.push(newMou);
       return newMou;
     },
@@ -497,6 +599,21 @@ const fallbackDb = {
       const m = inMemoryStore.mous.find((mou) => mou.id === where.id);
       if (m) Object.assign(m, data, { updatedAt: new Date() });
       return m;
+    },
+    updateMany: async ({ where, data }: any) => {
+      let count = 0;
+      inMemoryStore.mous.forEach((m) => {
+        if (m.schoolId === where.schoolId) {
+          Object.assign(m, data);
+          count++;
+        }
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.mous.length;
+      inMemoryStore.mous = inMemoryStore.mous.filter((m) => m.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.mous.length };
     },
   },
   template: {
@@ -553,6 +670,7 @@ const fallbackDb = {
           inMemoryStore.campaignRecipients.push({
             id: `rec_${Date.now()}_${Math.random()}`,
             campaignId: newCamp.id,
+            archived: false,
             ...r,
             createdAt: new Date(),
           });
@@ -569,17 +687,25 @@ const fallbackDb = {
   },
   campaignRecipient: {
     updateMany: async ({ where, data }: any) => {
+      let count = 0;
       inMemoryStore.campaignRecipients.forEach((r) => {
-        if (r.campaignId === where.campaignId) {
-          Object.assign(r, data);
-        }
+        if (where.campaignId && r.campaignId !== where.campaignId) return;
+        if (where.schoolId && r.schoolId !== where.schoolId) return;
+        Object.assign(r, data);
+        count++;
       });
-      return { count: 1 };
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.campaignRecipients.length;
+      inMemoryStore.campaignRecipients = inMemoryStore.campaignRecipients.filter((r) => r.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.campaignRecipients.length };
     },
   },
   messageLog: {
     findMany: async (args?: any) => {
       let list = [...inMemoryStore.messageLogs];
+      if (args?.where?.archived !== undefined) list = list.filter((m) => m.archived === args.where.archived);
       if (args?.where?.schoolId) list = list.filter((m) => m.schoolId === args.where.schoolId);
       if (args?.where?.channel) list = list.filter((m) => m.channel === args.where.channel);
       if (args?.orderBy?.createdAt === 'desc') {
@@ -592,9 +718,24 @@ const fallbackDb = {
       }));
     },
     create: async ({ data }: any) => {
-      const newMsg = { id: `msg_${Date.now()}`, ...data, createdAt: new Date() };
+      const newMsg = { id: `msg_${Date.now()}`, archived: false, ...data, createdAt: new Date() };
       inMemoryStore.messageLogs.push(newMsg);
       return newMsg;
+    },
+    updateMany: async ({ where, data }: any) => {
+      let count = 0;
+      inMemoryStore.messageLogs.forEach((m) => {
+        if (m.schoolId === where.schoolId) {
+          Object.assign(m, data);
+          count++;
+        }
+      });
+      return { count };
+    },
+    deleteMany: async ({ where }: any) => {
+      const initial = inMemoryStore.messageLogs.length;
+      inMemoryStore.messageLogs = inMemoryStore.messageLogs.filter((m) => m.schoolId !== where.schoolId);
+      return { count: initial - inMemoryStore.messageLogs.length };
     },
   },
   auditLog: {
@@ -606,7 +747,76 @@ const fallbackDb = {
   },
 };
 
-// Standard Prisma singleton pattern for Next.js development hot-reloads
+function createDbProxy(client: PrismaClient) {
+  if (process.env.NODE_ENV === 'production') return client;
+
+  return new Proxy(client, {
+    get(target, prop, receiver) {
+      const model = Reflect.get(target, prop, receiver);
+      if (model && typeof model === 'object') {
+        return new Proxy(model, {
+          get(modelTarget, modelProp, modelReceiver) {
+            const method = Reflect.get(modelTarget, modelProp, modelReceiver);
+            if (typeof method === 'function') {
+              return async (...args: any[]) => {
+                try {
+                  return await method.apply(modelTarget, args);
+                } catch (err: any) {
+                  const isConnErr =
+                    err?.code === 'P1001' ||
+                    err?.code === 'P1002' ||
+                    (typeof err?.message === 'string' &&
+                      (err.message.includes("Can't reach database server") ||
+                        err.message.includes('Timed out') ||
+                        err.message.includes('Connection error')));
+
+                  if (isConnErr) {
+                    console.warn(
+                      `[CRM Database] Database server connection unreachable. Falling back to local in-memory store for '${String(prop)}.${String(modelProp)}'.`
+                    );
+                    const fallbackModel = (fallbackDb as any)[prop];
+                    if (fallbackModel && typeof fallbackModel[modelProp] === 'function') {
+                      return await fallbackModel[modelProp](...args);
+                    }
+                  }
+                  throw err;
+                }
+              };
+            }
+            return method;
+          },
+        });
+      }
+
+      if (typeof model === 'function' && prop === '$transaction') {
+        return async (...args: any[]) => {
+          try {
+            return await model.apply(target, args);
+          } catch (err: any) {
+            const isConnErr =
+              err?.code === 'P1001' ||
+              err?.code === 'P1002' ||
+              (typeof err?.message === 'string' &&
+                (err.message.includes("Can't reach database server") ||
+                  err.message.includes('Timed out') ||
+                  err.message.includes('Connection error')));
+
+            if (isConnErr) {
+              console.warn(
+                '[CRM Database] Database server connection unreachable during transaction. Falling back to local in-memory store.'
+              );
+              return await fallbackDb.$transaction(args[0]);
+            }
+            throw err;
+          }
+        };
+      }
+
+      return model;
+    },
+  });
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
@@ -636,10 +846,8 @@ function initializeDatabase() {
   if (hasDatabaseUrl) {
     try {
       const client = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
-      if (process.env.NODE_ENV !== 'production') {
-        globalForPrisma.prisma = client;
-      }
-      return client;
+      globalForPrisma.prisma = client;
+      return createDbProxy(client);
     } catch (err: any) {
       console.warn(
         '[CRM Database] PrismaClient initialization failed in development, falling back to mock store:',

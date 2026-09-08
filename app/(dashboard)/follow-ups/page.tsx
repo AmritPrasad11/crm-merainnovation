@@ -9,10 +9,11 @@ export default async function FollowUpsPage() {
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-  // Overdue follow-ups
+  // Overdue follow-ups (excluding archived schools & archived follow-ups)
   const overdueList = await db.followUp.findMany({
     where: {
       status: 'PENDING',
+      school: { archived: false },
       dueDate: { lt: startOfDay },
     },
     include: {
@@ -22,10 +23,11 @@ export default async function FollowUpsPage() {
     orderBy: { dueDate: 'asc' },
   });
 
-  // Due Today follow-ups
+  // Due Today follow-ups (excluding archived schools & archived follow-ups)
   const dueTodayList = await db.followUp.findMany({
     where: {
       status: 'PENDING',
+      school: { archived: false },
       dueDate: { gte: startOfDay, lte: endOfDay },
     },
     include: {
@@ -35,10 +37,11 @@ export default async function FollowUpsPage() {
     orderBy: { dueDate: 'asc' },
   });
 
-  // Upcoming follow-ups
+  // Upcoming follow-ups (excluding archived schools & archived follow-ups)
   const upcomingList = await db.followUp.findMany({
     where: {
       status: 'PENDING',
+      school: { archived: false },
       dueDate: { gt: endOfDay },
     },
     include: {
@@ -54,7 +57,7 @@ export default async function FollowUpsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Follow-up Management</h1>
         <p className="text-xs text-slate-500 mt-1">
-          Stay on top of outreach schedules, due calls, and pending school follow-ups.
+          Stay on top of outreach schedules, due calls, and pending active school follow-ups.
         </p>
       </div>
 

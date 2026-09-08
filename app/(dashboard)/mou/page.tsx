@@ -3,6 +3,9 @@ import MouClient from '@/components/MouClient';
 
 export default async function MouPage() {
   const mous = await db.mou.findMany({
+    where: {
+      school: { archived: false },
+    },
     include: {
       school: { select: { id: true, name: true, city: true, state: true, salesStage: true } },
       createdBy: { select: { name: true } },

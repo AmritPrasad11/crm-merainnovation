@@ -67,10 +67,12 @@ export default function ImportWizard({ users, currentUserId }: ImportWizardProps
 
   // Sample CSV template generator
   const handleDownloadSample = () => {
-    const sampleCSV = `School Name,City,State,Address,Website,Board,School Type,Student Strength,STEM Lab,Robotics Lab,Contact Name,Designation,Email,Phone,Sales Stage,Notes
-St. Xavier Public School,Jaipur,Rajasthan,C-Scheme Main Road,www.stxaviersjaipur.edu.in,CBSE,Private,2400,Yes,No,Dr. R. K. Sharma,Principal,principal@stxaviersjaipur.edu.in,+91 98290 12345,INTERESTED,Interested in robotics batch for 100 students
-Delhi Public School,Indore,Madhya Pradesh,Nipania Bypass,www.dpsindore.org,CBSE,Private,3200,Yes,Yes,Anjali Gupta,Director,director@dpsindore.org,+91 731 290 9999,PROPOSAL_SENT,Sent commercial proposal v1
-Modern Heritage Academy,Chandigarh,Punjab,Sector 34-A,www.mha-chandigarh.edu.in,ICSE,Trust,1800,No,No,Vikramaditya Rao,STEM Coordinator,vikram@mha.edu.in,+91 172 456 7890,CONTACTED,Initial outreach email sent`;
+    const sampleCSV = `School Name,City,State,Address,School Website,Contact Name,Designation,Email,Phone
+St. Xavier Public School,Jaipur,Rajasthan,C-Scheme Main Road,www.stxaviersjaipur.edu.in,Dr. R. K. Sharma,Principal,principal@stxaviersjaipur.edu.in,+91 98290 12345
+Delhi Public School,Indore,Madhya Pradesh,Nipania Bypass Road,www.dpsindore.org,Anjali Gupta,Director,director@dpsindore.org,+91 731 290 9999
+Modern Heritage Academy,Chandigarh,Punjab,Sector 34-A,www.mha-chandigarh.edu.in,Vikramaditya Rao,STEM Coordinator,vikram@mha.edu.in,+91 172 456 7890
+Oakwood International School,Bengaluru,Karnataka,Koramangala 4th Block,www.oakwood.edu.in,Suresh Menon,Vice Principal,suresh@oakwood.edu.in,+91 80 2345 6789
+Greenwood High School,Hyderabad,Telangana,Banjara Hills Road No 12,www.greenwood.edu.in,Priya Sharma,Management Trustee,priya@greenwood.edu.in,+91 40 8765 4321`;
 
     const blob = new Blob([sampleCSV], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -336,6 +338,17 @@ Modern Heritage Academy,Chandigarh,Punjab,Sector 34-A,www.mha-chandigarh.edu.in,
             </div>
           </div>
 
+          {/* Initial Import Pipeline Notice */}
+          <div className="p-4 bg-blue-50/80 border border-blue-200/80 rounded-2xl text-xs space-y-1">
+            <div className="font-bold text-blue-950 flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>Initial Import Pipeline Governance Rule:</span>
+            </div>
+            <p className="text-blue-900 leading-relaxed">
+              Every newly imported school will be initialized with <strong>Sales Stage = NOT_CONTACTED</strong> ("School added to CRM, no outreach activity performed yet"). Additional school profile details (Address, Board, STEM/Robotics labs, Student Strength) can be added or edited anytime from the School Profile after import.
+            </p>
+          </div>
+
           {/* Records Preview Table */}
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden text-xs">
             <div className="p-4 bg-slate-50 border-b flex items-center justify-between">
@@ -361,9 +374,10 @@ Modern Heritage Academy,Chandigarh,Punjab,Sector 34-A,www.mha-chandigarh.edu.in,
                     <th className="p-3">#</th>
                     <th className="p-3">School Name</th>
                     <th className="p-3">City / State</th>
-                    <th className="p-3">Board / Type</th>
+                    <th className="p-3">Website</th>
                     <th className="p-3">Primary Contact</th>
-                    <th className="p-3">Status</th>
+                    <th className="p-3">Initial Sales Stage</th>
+                    <th className="p-3">Validation</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -377,9 +391,23 @@ Modern Heritage Academy,Chandigarh,Punjab,Sector 34-A,www.mha-chandigarh.edu.in,
                           {rec.city || '?'}, {rec.state || '?'}
                         </td>
                         <td className="p-3 text-slate-600">
-                          {rec.board || 'CBSE'} &bull; {rec.schoolType || 'Private'}
+                          {rec.website || 'N/A'}
                         </td>
-                        <td className="p-3 text-slate-700">{rec.contactName || 'N/A'}</td>
+                        <td className="p-3 text-slate-700">
+                          {rec.contactName ? (
+                            <div>
+                              <div className="font-semibold text-slate-900">{rec.contactName}</div>
+                              <div className="text-[11px] text-slate-500">{rec.contactDesignation || 'Principal'}</div>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 italic">N/A</span>
+                          )}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-800 border border-slate-300 font-semibold rounded text-[10px]">
+                            NOT_CONTACTED
+                          </span>
+                        </td>
                         <td className="p-3">
                           {isValid ? (
                             <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded text-[10px]">

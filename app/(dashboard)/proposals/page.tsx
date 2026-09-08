@@ -3,6 +3,9 @@ import ProposalsClient from '@/components/ProposalsClient';
 
 export default async function ProposalsPage() {
   const proposals = await db.proposal.findMany({
+    where: {
+      school: { archived: false },
+    },
     include: {
       school: { select: { id: true, name: true, city: true, state: true } },
       createdBy: { select: { name: true } },

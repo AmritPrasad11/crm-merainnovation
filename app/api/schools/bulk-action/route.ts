@@ -58,12 +58,23 @@ export async function POST(request: Request) {
         });
       }
     } else if (action === 'ARCHIVE') {
-      for (const id of schoolIds) {
-        await db.school.update({
-          where: { id },
-          data: { archived: true },
-        });
-      }
+      await db.$transaction(async (tx) => {
+        for (const id of schoolIds) {
+          await tx.school.update({
+            where: { id },
+            data: {
+              archived: true,
+            },
+          });
+          await tx.contact.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.activity.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.followUp.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.proposal.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.mou.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.campaignRecipient.updateMany({ where: { schoolId: id }, data: { archived: true } });
+          await tx.messageLog.updateMany({ where: { schoolId: id }, data: { archived: true } });
+        }
+      });
     } else {
       return NextResponse.json({ error: 'Invalid bulk action specified.' }, { status: 400 });
     }

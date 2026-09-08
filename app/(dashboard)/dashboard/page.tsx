@@ -23,7 +23,7 @@ import { formatDate } from '@/lib/utils';
 export default async function DashboardPage() {
   const user = await getCurrentUser();
 
-  // Fetch counts by Sales Stage
+  // Fetch counts by Sales Stage (excluding archived schools)
   const schoolsByStage = await db.school.groupBy({
     by: ['salesStage'],
     where: { archived: false },
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
 
   const totalSchools = Object.values(stageCounts).reduce((a, b) => a + b, 0);
 
-  // Follow-ups due today & overdue
+  // Follow-ups due today & overdue (excluding archived schools & archived followups)
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
@@ -45,6 +45,7 @@ export default async function DashboardPage() {
   const followUpsDueToday = await db.followUp.count({
     where: {
       status: 'PENDING',
+      school: { archived: false },
       dueDate: { gte: startOfDay, lte: endOfDay },
     },
   });
@@ -52,6 +53,7 @@ export default async function DashboardPage() {
   const overdueFollowUps = await db.followUp.count({
     where: {
       status: 'PENDING',
+      school: { archived: false },
       dueDate: { lt: startOfDay },
     },
   });
@@ -59,6 +61,7 @@ export default async function DashboardPage() {
   const recentFollowUpsList = await db.followUp.findMany({
     where: {
       status: 'PENDING',
+      school: { archived: false },
     },
     include: {
       school: true,
@@ -68,8 +71,11 @@ export default async function DashboardPage() {
     take: 5,
   });
 
-  // Recent activities
+  // Recent activities (excluding archived activities and archived schools)
   const recentActivities = await db.activity.findMany({
+    where: {
+      school: { archived: false },
+    },
     include: {
       school: true,
       user: true,
@@ -108,7 +114,7 @@ export default async function DashboardPage() {
             Welcome back, {user?.name}
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Real-time overview of school outreach, pipeline performance, and follow-ups.
+            Real-time overview of active school outreach, pipeline performance, and follow-ups.
           </p>
         </div>
 
@@ -134,7 +140,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider mb-2">
-            <span>Total Schools</span>
+            <span>Total Active</span>
             <Building2 className="w-4 h-4 text-slate-400" />
           </div>
           <div className="text-2xl font-black text-slate-900">{totalSchools}</div>
@@ -201,13 +207,13 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900">Sales Stage Funnel</h2>
-              <p className="text-xs text-slate-500">Live breakdown across all sales pipeline stages</p>
+              <p className="text-xs text-slate-500">Live breakdown across all active sales pipeline stages</p>
             </div>
             <Link
               href="/schools"
               className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
-              <span>View All Schools</span>
+              <span>View Active Schools</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -277,7 +283,7 @@ export default async function DashboardPage() {
 
             {recentFollowUpsList.length === 0 ? (
               <p className="text-xs text-slate-500 italic py-4 text-center">
-                No pending follow-ups right now.
+                No pending active follow-ups right now.
               </p>
             ) : (
               <div className="space-y-3">

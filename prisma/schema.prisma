@@ -1,3 +1,6 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -13,6 +16,7 @@ enum Role {
 }
 
 enum SalesStage {
+  NOT_CONTACTED
   NEW
   CONTACTED
   ENGAGED
@@ -22,6 +26,7 @@ enum SalesStage {
   MOU_SENT
   MOU_SIGNED
   CONVERTED
+  LOST
   NOT_INTERESTED
   REJECTED
   NO_RESPONSE
@@ -30,38 +35,37 @@ enum SalesStage {
 
 enum ActivityType {
   CALL
+  EMAIL_SENT
+  EMAIL_RECEIVED
+  WHATSAPP_SENT
+  WHATSAPP_RECEIVED
   MEETING
   NOTE
-  FOLLOW_UP
   PROPOSAL
-  MOU
   STAGE_CHANGE
-  EMAIL_SENT
-  WHATSAPP_SENT
   SYSTEM
 }
 
 enum FollowUpStatus {
   PENDING
   COMPLETED
-  RESCHEDULED
   CANCELLED
 }
 
 enum ProposalStatus {
   DRAFT
   SENT
-  UNDER_REVIEW
   ACCEPTED
   REJECTED
+  REVISED
 }
 
 enum MouStatus {
   NOT_SENT
   SENT
-  UNDER_REVIEW
   SIGNED
-  REJECTED
+  EXPIRED
+  TERMINATED
 }
 
 enum Channel {
@@ -74,7 +78,6 @@ enum CampaignStatus {
   SCHEDULED
   RUNNING
   COMPLETED
-  PAUSED
   CANCELLED
 }
 
@@ -84,7 +87,6 @@ enum MessageStatus {
   DELIVERED
   READ
   FAILED
-  REPLIED
 }
 
 model User {
@@ -98,6 +100,7 @@ model User {
 
   assignedSchools    School[]   @relation("AssignedUser")
   createdSchools     School[]   @relation("CreatedUser")
+  archivedSchools    School[]   @relation("ArchivedSchoolUser")
   activities         Activity[]
   followUps          FollowUp[] @relation("AssignedFollowUpUser")
   createdFollowUps   FollowUp[] @relation("CreatedFollowUpUser")
@@ -127,6 +130,9 @@ model School {
   salesStage         SalesStage   @default(NEW)
   leadScore          Int          @default(0)
   archived           Boolean      @default(false)
+  archivedAt         DateTime?
+  archivedById       String?
+  archivedBy         User?        @relation("ArchivedSchoolUser", fields: [archivedById], references: [id])
   
   assignedUserId     String?
   assignedUser       User?        @relation("AssignedUser", fields: [assignedUserId], references: [id])
@@ -150,6 +156,7 @@ model School {
   @@index([salesStage])
   @@index([city, state])
   @@index([normalizedName])
+  @@index([archived])
 }
 
 model Contact {
@@ -162,6 +169,7 @@ model Contact {
   phone       String?
   whatsapp    String?
   isPrimary   Boolean  @default(false)
+  archived    Boolean  @default(false)
   notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -170,6 +178,7 @@ model Contact {
   messageLogs        MessageLog[]
 
   @@index([schoolId])
+  @@index([schoolId, archived])
 }
 
 model Activity {
@@ -182,9 +191,11 @@ model Activity {
   title       String
   description String?
   metadata    String?
+  archived    Boolean      @default(false)
   createdAt   DateTime     @default(now())
 
   @@index([schoolId])
+  @@index([schoolId, archived])
   @@index([createdAt])
 }
 
@@ -200,11 +211,13 @@ model FollowUp {
   dueDate        DateTime
   status         FollowUpStatus @default(PENDING)
   completedAt    DateTime?
+  archived       Boolean        @default(false)
   notes          String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
   @@index([schoolId])
+  @@index([schoolId, archived])
   @@index([dueDate, status])
 }
 
@@ -217,6 +230,7 @@ model Proposal {
   amount      Float?
   status      ProposalStatus @default(DRAFT)
   documentUrl String?
+  archived    Boolean        @default(false)
   notes       String?
   createdById String?
   createdBy   User?          @relation(fields: [createdById], references: [id])
@@ -224,6 +238,7 @@ model Proposal {
   updatedAt   DateTime       @updatedAt
 
   @@index([schoolId])
+  @@index([schoolId, archived])
 }
 
 model Mou {
@@ -235,6 +250,7 @@ model Mou {
   documentUrl String?
   sentDate    DateTime?
   signedDate  DateTime?
+  archived    Boolean   @default(false)
   notes       String?
   createdById String?
   createdBy   User?     @relation(fields: [createdById], references: [id])
@@ -242,6 +258,7 @@ model Mou {
   updatedAt   DateTime  @updatedAt
 
   @@index([schoolId])
+  @@index([schoolId, archived])
 }
 
 model Template {
@@ -299,9 +316,11 @@ model CampaignRecipient {
   deliveredAt      DateTime?
   readAt           DateTime?
   error            String?
+  archived         Boolean       @default(false)
   createdAt        DateTime      @default(now())
 
   @@index([campaignId])
+  @@index([schoolId, archived])
 }
 
 model MessageLog {
@@ -320,9 +339,11 @@ model MessageLog {
   content       String
   status        MessageStatus @default(SENT)
   externalId    String?       // Meta Message ID or Email Provider Message ID
+  archived      Boolean       @default(false)
   createdAt     DateTime      @default(now())
 
   @@index([schoolId])
+  @@index([schoolId, archived])
   @@index([channel])
 }
 

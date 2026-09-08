@@ -1,6 +1,7 @@
 export type Role = 'ADMIN' | 'OUTREACH_USER';
 
 export type SalesStage =
+  | 'NOT_CONTACTED'
   | 'NEW'
   | 'CONTACTED'
   | 'ENGAGED'
@@ -41,6 +42,7 @@ export interface UserSession {
 }
 
 export const SALES_STAGE_PIPELINE: { key: SalesStage; label: string; color: string; description: string }[] = [
+  { key: 'NOT_CONTACTED', label: 'Not Contacted', color: 'bg-slate-100 text-slate-800 border-slate-300', description: 'Newly added school, no outreach activity performed yet' },
   { key: 'NEW', label: 'New', color: 'bg-slate-100 text-slate-800 border-slate-300', description: 'Newly added school record' },
   { key: 'CONTACTED', label: 'Contacted', color: 'bg-blue-50 text-blue-700 border-blue-200', description: 'Initial outreach sent (Email/WhatsApp/Call)' },
   { key: 'ENGAGED', label: 'Engaged', color: 'bg-cyan-50 text-cyan-700 border-cyan-200', description: 'School responded or engaged with communication' },

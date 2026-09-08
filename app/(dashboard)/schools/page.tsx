@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
 import SchoolsTableClient from '@/components/SchoolsTableClient';
 
 export default async function SchoolsPage({
@@ -6,14 +7,16 @@ export default async function SchoolsPage({
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
+  const currentUser = await getCurrentUser();
   const params = await searchParams;
   const search = params.q || '';
   const stageFilter = params.stage || '';
   const boardFilter = params.board || '';
   const sortBy = params.sort || 'createdAt';
+  const viewMode = params.view === 'archived' ? 'archived' : 'active';
 
   const where: any = {
-    archived: false,
+    archived: viewMode === 'archived',
   };
 
   if (search) {
@@ -60,10 +63,12 @@ export default async function SchoolsPage({
     <SchoolsTableClient
       schools={schools}
       users={users}
+      currentUser={currentUser}
       search={search}
       stageFilter={stageFilter}
       boardFilter={boardFilter}
       sortBy={sortBy}
+      viewMode={viewMode}
     />
   );
 }
