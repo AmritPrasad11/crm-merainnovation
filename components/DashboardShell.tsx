@@ -50,12 +50,14 @@ export default function DashboardShell({ user, children }: DashboardShellProps) 
     { label: 'Messages', href: '/messages', icon: MessageSquare },
     { label: 'Proposals', href: '/proposals', icon: FileText },
     { label: 'MOU', href: '/mou', icon: FileCheck },
-    { label: 'Templates', href: '/templates', icon: LayoutTemplate },
     { label: 'Reports', href: '/reports', icon: BarChart3 },
     ...(user?.role === 'ADMIN'
-      ? [{ label: 'Users', href: '/users', icon: UserCheck }]
+      ? [
+          { label: 'Templates', href: '/templates', icon: LayoutTemplate },
+          { label: 'Users', href: '/users', icon: UserCheck },
+          { label: 'Settings', href: '/settings', icon: Settings },
+        ]
       : []),
-    { label: 'Settings', href: '/settings', icon: Settings },
   ];
 
   return (

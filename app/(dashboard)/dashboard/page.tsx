@@ -1,6 +1,9 @@
 import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/rbac';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 import {
   Building2,
   CheckCircle2,
@@ -21,12 +24,17 @@ import { SALES_STAGE_PIPELINE, SALES_STAGE_OUTCOMES } from '@/lib/types';
 import { formatDate } from '@/lib/utils';
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
+  const user = await getAuthenticatedUser();
+  const isOutreachUser = user?.role !== 'ADMIN';
+  const userId = user?.id;
 
-  // Fetch counts by Sales Stage (excluding archived schools)
-  const schoolsByStage = await db.school.groupBy({
+  // Base scope filter for OUTREACH_USER vs ADMIN
+  const schoolScopeWhere = isOutreachUser ? { archived: false, assignedUserId: userId } : { archived: false };
+
+  // Fetch counts by Sales Stage
+  const schoolsByStage = await (db as any).school.groupBy({
     by: ['salesStage'],
-    where: { archived: false },
+    where: schoolScopeWhere,
     _count: { id: true },
   });
 
@@ -37,31 +45,35 @@ export default async function DashboardPage() {
 
   const totalSchools = Object.values(stageCounts).reduce((a, b) => a + b, 0);
 
-  // Follow-ups due today & overdue (excluding archived schools & archived followups)
+  // Follow-ups due today & overdue
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-  const followUpsDueToday = await db.followUp.count({
+  const followUpScopeWhere = isOutreachUser
+    ? { school: { archived: false, assignedUserId: userId } }
+    : { school: { archived: false } };
+
+  const followUpsDueToday = await (db as any).followUp.count({
     where: {
       status: 'PENDING',
-      school: { archived: false },
+      ...followUpScopeWhere,
       dueDate: { gte: startOfDay, lte: endOfDay },
     },
   });
 
-  const overdueFollowUps = await db.followUp.count({
+  const overdueFollowUps = await (db as any).followUp.count({
     where: {
       status: 'PENDING',
-      school: { archived: false },
+      ...followUpScopeWhere,
       dueDate: { lt: startOfDay },
     },
   });
 
-  const recentFollowUpsList = await db.followUp.findMany({
+  const recentFollowUpsList = await (db as any).followUp.findMany({
     where: {
       status: 'PENDING',
-      school: { archived: false },
+      ...followUpScopeWhere,
     },
     include: {
       school: true,
@@ -71,10 +83,13 @@ export default async function DashboardPage() {
     take: 5,
   });
 
-  // Recent activities (excluding archived activities and archived schools)
-  const recentActivities = await db.activity.findMany({
+  // Recent activities
+  const recentActivities = await (db as any).activity.findMany({
     where: {
-      school: { archived: false },
+      school: {
+        archived: false,
+        ...(isOutreachUser ? { assignedUserId: userId } : {}),
+      },
     },
     include: {
       school: true,

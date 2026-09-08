@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -56,6 +56,12 @@ export default function SchoolsTableClient({
   viewMode = 'active',
 }: SchoolsTableClientProps) {
   const router = useRouter();
+  const [localSchools, setLocalSchools] = useState<any[]>(schools);
+
+  useEffect(() => {
+    setLocalSchools(schools);
+  }, [schools]);
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -365,7 +371,7 @@ export default function SchoolsTableClient({
 
       {/* School List Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden text-xs">
-        {schools.length === 0 ? (
+        {localSchools.length === 0 ? (
           <div className="text-center py-12 px-4 space-y-3">
             <Building2 className="w-10 h-10 text-slate-300 mx-auto" />
             <h3 className="text-sm font-bold text-slate-700">
@@ -394,8 +400,14 @@ export default function SchoolsTableClient({
                     <th className="p-4 w-10">
                       <input
                         type="checkbox"
-                        checked={selectedIds.length === schools.length && schools.length > 0}
-                        onChange={handleSelectAll}
+                        checked={selectedIds.length === localSchools.length && localSchools.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedIds(localSchools.map((s) => s.id));
+                          } else {
+                            setSelectedIds([]);
+                          }
+                        }}
                         className="w-4 h-4 rounded text-blue-600"
                       />
                     </th>
@@ -410,7 +422,7 @@ export default function SchoolsTableClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {schools.map((school) => {
+                {localSchools.map((school) => {
                   const stageObj = allStages.find((s) => s.key === school.salesStage);
                   const primaryContact = school.contacts[0];
                   const isSelected = selectedIds.includes(school.id);
@@ -613,7 +625,10 @@ export default function SchoolsTableClient({
           isOpen={Boolean(archivingSchool)}
           onClose={() => setArchivingSchool(null)}
           onSuccess={() => {
-            showNotification(`School '${archivingSchool?.name}' and all related records have been archived.`);
+            const archivedName = archivingSchool?.name;
+            const targetId = archivingSchool?.id;
+            setLocalSchools((prev) => prev.filter((s) => s.id !== targetId));
+            showNotification(`School '${archivedName}' and all related records have been archived.`);
             setArchivingSchool(null);
             router.refresh();
           }}
@@ -627,7 +642,10 @@ export default function SchoolsTableClient({
           isOpen={Boolean(unarchivingSchool)}
           onClose={() => setUnarchivingSchool(null)}
           onSuccess={() => {
-            showNotification(`School '${unarchivingSchool?.name}' and all related records have been restored to active status.`);
+            const unarchivedName = unarchivingSchool?.name;
+            const targetId = unarchivingSchool?.id;
+            setLocalSchools((prev) => prev.filter((s) => s.id !== targetId));
+            showNotification(`School '${unarchivedName}' and all related records have been restored.`);
             setUnarchivingSchool(null);
             router.refresh();
           }}
@@ -641,7 +659,10 @@ export default function SchoolsTableClient({
           isOpen={Boolean(deletingSchool)}
           onClose={() => setDeletingSchool(null)}
           onSuccess={() => {
-            showNotification(`School '${deletingSchool?.name}' and all associated records permanently deleted.`);
+            const deletedName = deletingSchool?.name;
+            const targetId = deletingSchool?.id;
+            setLocalSchools((prev) => prev.filter((s) => s.id !== targetId));
+            showNotification(`School '${deletedName}' and all associated records permanently deleted.`);
             setDeletingSchool(null);
             router.refresh();
           }}

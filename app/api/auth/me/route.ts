@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/rbac';
 
 export async function GET() {
-  const user = await getCurrentUser();
+  const user = await getAuthenticatedUser();
   if (!user) {
     return NextResponse.json({ authenticated: false, user: null }, { status: 401 });
   }

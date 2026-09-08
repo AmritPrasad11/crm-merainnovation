@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { normalizeText, calculateLeadScore } from './utils';
 
 // Global in-memory storage for development fallback when DATABASE_URL is missing in dev
-const inMemoryStore: {
+const initialInMemoryStore: {
   users: any[];
   schools: any[];
   contacts: any[];
@@ -21,18 +21,24 @@ const inMemoryStore: {
       id: 'usr_admin',
       name: 'Mera Admin',
       email: 'admin@merainnovation.com',
+      phone: '+91 98765 00001',
       passwordHash: 'c7c2518e950893047c05eb7614d9b3e1ddb8b548b813b5bf5704179373059082',
       role: 'ADMIN',
-      createdAt: new Date(),
+      isActive: true,
+      lastLoginAt: new Date(),
+      createdAt: new Date(Date.now() - 30 * 86400000),
       updatedAt: new Date(),
     },
     {
       id: 'usr_amrit',
       name: 'Amrit',
       email: 'amrit@merainnovation.com',
+      phone: '+91 98765 00002',
       passwordHash: 'f4f107f9c8f0e5728a38a0a8677c7f39572b6b553e19488a4b64e528a475d654',
       role: 'OUTREACH_USER',
-      createdAt: new Date(),
+      isActive: true,
+      lastLoginAt: new Date(),
+      createdAt: new Date(Date.now() - 20 * 86400000),
       updatedAt: new Date(),
     },
   ],
@@ -97,6 +103,156 @@ const inMemoryStore: {
       nextFollowUpAt: new Date(),
       notes: 'Proposal sent on 20th. Scheduled follow-up with Management Trustee.',
     },
+    {
+      id: 'sch_3',
+      name: 'Ryan International School',
+      normalizedName: 'ryaninternationalschool',
+      city: 'Delhi',
+      state: 'Delhi',
+      address: 'Vasant Kunj, Sector C',
+      website: 'www.ryaninternational.org',
+      board: 'ICSE',
+      schoolType: 'International',
+      studentStrength: 2800,
+      hasStemLab: false,
+      hasRoboticsLab: false,
+      primaryEmail: 'info.vk@ryan.edu.in',
+      primaryPhone: '+91 11 2613 8888',
+      primaryWhatsapp: '+91 11 2613 8888',
+      source: 'CSV Batch Import',
+      salesStage: 'NOT_CONTACTED',
+      leadScore: 10,
+      archived: false,
+      archivedAt: null,
+      archivedById: null,
+      assignedUserId: 'usr_amrit',
+      createdById: 'usr_admin',
+      createdAt: new Date(Date.now() - 2 * 86400000),
+      updatedAt: new Date(),
+      lastContactedAt: null,
+      nextFollowUpAt: new Date(Date.now() + 2 * 86400000),
+      notes: 'Imported in initial batch. No outreach activity performed yet.',
+    },
+    {
+      id: 'sch_4',
+      name: 'Cambridge International School',
+      normalizedName: 'cambridgeinternationalschool',
+      city: 'Bangalore',
+      state: 'Karnataka',
+      address: 'Whitefield Main Road',
+      website: 'www.cambridgebg.edu.in',
+      board: 'IB',
+      schoolType: 'International',
+      studentStrength: 2100,
+      hasStemLab: true,
+      hasRoboticsLab: true,
+      primaryEmail: 'info@cambridgebg.edu.in',
+      primaryPhone: '+91 80 4123 5555',
+      primaryWhatsapp: '+91 80 4123 5555',
+      source: 'Direct Lead',
+      salesStage: 'MOU_SENT',
+      leadScore: 90,
+      archived: false,
+      archivedAt: null,
+      archivedById: null,
+      assignedUserId: 'usr_amrit',
+      createdById: 'usr_admin',
+      createdAt: new Date(Date.now() - 15 * 86400000),
+      updatedAt: new Date(),
+      lastContactedAt: new Date(Date.now() - 1 * 86400000),
+      nextFollowUpAt: new Date(Date.now() + 1 * 86400000),
+      notes: 'MOU document sent to School Management Board for signing.',
+    },
+    {
+      id: 'sch_5',
+      name: 'Heritage Xperiential Learning School',
+      normalizedName: 'heritagexperientiallearningschool',
+      city: 'Gurugram',
+      state: 'Haryana',
+      address: 'Sector 62, Golf Course Ext Road',
+      website: 'www.heritagexperiential.org',
+      board: 'CBSE',
+      schoolType: 'Private',
+      studentStrength: 3500,
+      hasStemLab: true,
+      hasRoboticsLab: true,
+      primaryEmail: 'contact@heritagexperiential.org',
+      primaryPhone: '+91 124 476 2000',
+      primaryWhatsapp: '+91 124 476 2000',
+      source: 'Referral',
+      salesStage: 'WON',
+      leadScore: 98,
+      archived: false,
+      archivedAt: null,
+      archivedById: null,
+      assignedUserId: 'usr_admin',
+      createdById: 'usr_admin',
+      createdAt: new Date(Date.now() - 40 * 86400000),
+      updatedAt: new Date(),
+      lastContactedAt: new Date(Date.now() - 3 * 86400000),
+      nextFollowUpAt: null,
+      notes: 'Successfully closed! STEM & Robotics Lab setup scheduled for installation.',
+    },
+    {
+      id: 'sch_arch_1',
+      name: 'DAV Public School',
+      normalizedName: 'davpublicschool',
+      city: 'Chandigarh',
+      state: 'Punjab',
+      address: 'Sector 15-A',
+      website: 'www.davchd.com',
+      board: 'CBSE',
+      schoolType: 'Trust / Foundation',
+      studentStrength: 1900,
+      hasStemLab: true,
+      hasRoboticsLab: false,
+      primaryEmail: 'principal@davchd.com',
+      primaryPhone: '+91 172 274 0000',
+      primaryWhatsapp: '+91 172 274 0000',
+      source: 'Cold Outreach',
+      salesStage: 'NOT_INTERESTED',
+      leadScore: 15,
+      archived: true,
+      archivedAt: new Date(Date.now() - 4 * 86400000),
+      archivedById: 'usr_admin',
+      assignedUserId: 'usr_amrit',
+      createdById: 'usr_admin',
+      createdAt: new Date(Date.now() - 25 * 86400000),
+      updatedAt: new Date(Date.now() - 4 * 86400000),
+      lastContactedAt: new Date(Date.now() - 6 * 86400000),
+      nextFollowUpAt: null,
+      notes: 'Archived record. School signed with an existing vendor for 2026-27.',
+    },
+    {
+      id: 'sch_arch_2',
+      name: 'Modern Heritage Academy',
+      normalizedName: 'modernheritageacademy',
+      city: 'Pune',
+      state: 'Maharashtra',
+      address: 'Kalyani Nagar',
+      website: 'www.modernheritagepune.edu.in',
+      board: 'IB',
+      schoolType: 'Private',
+      studentStrength: 1600,
+      hasStemLab: false,
+      hasRoboticsLab: false,
+      primaryEmail: 'admin@mha-pune.edu.in',
+      primaryPhone: '+91 20 2668 1234',
+      primaryWhatsapp: '+91 20 2668 1234',
+      source: 'Website Lead',
+      salesStage: 'REJECTED',
+      leadScore: 20,
+      archived: true,
+      archivedAt: new Date(Date.now() - 2 * 86400000),
+      archivedById: 'usr_admin',
+      assignedUserId: 'usr_amrit',
+      createdById: 'usr_admin',
+      createdAt: new Date(Date.now() - 20 * 86400000),
+      updatedAt: new Date(Date.now() - 2 * 86400000),
+      lastContactedAt: new Date(Date.now() - 3 * 86400000),
+      nextFollowUpAt: null,
+      notes: 'Archived. School management postponed STEM lab implementation to next year.',
+    },
   ],
   contacts: [
     {
@@ -122,6 +278,71 @@ const inMemoryStore: {
       whatsapp: '+91 731 290 9999',
       isPrimary: true,
       archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'cnt_3',
+      schoolId: 'sch_3',
+      name: 'Rajesh Mehta',
+      designation: 'Vice Principal',
+      email: 'vp@ryan.edu.in',
+      phone: '+91 11 2613 8888',
+      whatsapp: '+91 11 2613 8888',
+      isPrimary: true,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'cnt_4',
+      schoolId: 'sch_4',
+      name: 'Siddharth Nair',
+      designation: 'Academic Dean',
+      email: 'dean@cambridgebg.edu.in',
+      phone: '+91 80 4123 5555',
+      whatsapp: '+91 80 4123 5555',
+      isPrimary: true,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'cnt_5',
+      schoolId: 'sch_5',
+      name: 'Meenakshi Sundaram',
+      designation: 'Head of Innovation',
+      email: 'innovation@heritagexperiential.org',
+      phone: '+91 124 476 2000',
+      whatsapp: '+91 124 476 2000',
+      isPrimary: true,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'cnt_arch_1',
+      schoolId: 'sch_arch_1',
+      name: 'Vikramaditya Rao',
+      designation: 'Robotics Coordinator',
+      email: 'vikram@davchd.com',
+      phone: '+91 172 274 0000',
+      whatsapp: '+91 172 274 0000',
+      isPrimary: true,
+      archived: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+    {
+      id: 'cnt_arch_2',
+      schoolId: 'sch_arch_2',
+      name: 'Sunita Deshmukh',
+      designation: 'Vice Principal',
+      email: 'sunita@mha-pune.edu.in',
+      phone: '+91 20 2668 1234',
+      whatsapp: '+91 20 2668 1234',
+      isPrimary: true,
+      archived: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
@@ -229,6 +450,13 @@ const inMemoryStore: {
   auditLogs: [],
 };
 
+const globalForStore = globalThis as unknown as {
+  __inMemoryStore: typeof initialInMemoryStore | undefined;
+};
+
+export const inMemoryStore = globalForStore.__inMemoryStore ?? initialInMemoryStore;
+globalForStore.__inMemoryStore = inMemoryStore;
+
 // Fallback Prisma-like mock store for local development only
 const fallbackDb = {
   $transaction: async (arg: any) => {
@@ -250,6 +478,23 @@ const fallbackDb = {
       ) || null,
     findMany: async (args?: any) => {
       let result = [...inMemoryStore.users];
+      if (args?.where?.role) {
+        result = result.filter((u) => u.role === args.where.role);
+      }
+      if (args?.where?.isActive !== undefined) {
+        result = result.filter((u) => (args.where.isActive ? u.isActive !== false : u.isActive === false));
+      }
+      if (args?.where?.OR) {
+        const q = args.where.OR[0]?.name?.contains?.toLowerCase() || '';
+        if (q) {
+          result = result.filter(
+            (u) =>
+              u.name.toLowerCase().includes(q) ||
+              u.email.toLowerCase().includes(q) ||
+              (u.phone && u.phone.toLowerCase().includes(q))
+          );
+        }
+      }
       return result.map((u) => ({
         ...u,
         _count: {
@@ -262,6 +507,15 @@ const fallbackDb = {
       const newUser = { id: `usr_${Date.now()}`, ...data, createdAt: new Date(), updatedAt: new Date() };
       inMemoryStore.users.push(newUser);
       return newUser;
+    },
+    update: async ({ where, data }: any) => {
+      const u = inMemoryStore.users.find(
+        (user) => (where.id && user.id === where.id) || (where.email && user.email.toLowerCase() === where.email.toLowerCase())
+      );
+      if (u) {
+        Object.assign(u, data, { updatedAt: new Date() });
+      }
+      return u || { id: where.id, ...data };
     },
   },
   school: {
@@ -286,11 +540,24 @@ const fallbackDb = {
       };
     },
     findMany: async (args?: any) => {
-      const isArchivedTarget = args?.where?.archived === true;
-      let list = inMemoryStore.schools.filter((s) => (isArchivedTarget ? s.archived : !s.archived));
+      let isArchivedTarget = args?.where?.archived === true;
+      if (!isArchivedTarget && Array.isArray(args?.where?.AND)) {
+        isArchivedTarget = args.where.AND.some((item: any) => item?.archived === true);
+      }
+      let list = inMemoryStore.schools.filter((s) => (isArchivedTarget ? Boolean(s.archived) === true : !s.archived));
 
-      if (args?.where?.OR) {
-        const q = args.where.OR[0]?.name?.contains?.toLowerCase() || '';
+      if (args?.where?.assignedUserId) {
+        list = list.filter((s) => s.assignedUserId === args.where.assignedUserId || s.createdById === args.where.assignedUserId);
+      }
+
+      let orFilters = args?.where?.OR;
+      if (!orFilters && args?.where?.AND) {
+        const andOr = args.where.AND.find((item: any) => item.OR);
+        if (andOr) orFilters = andOr.OR;
+      }
+
+      if (orFilters && orFilters.length > 0) {
+        const q = orFilters[0]?.name?.contains?.toLowerCase() || '';
         if (q) {
           list = list.filter(
             (s) =>
@@ -373,8 +640,24 @@ const fallbackDb = {
       return newSchool;
     },
     update: async ({ where, data }: any) => {
-      const school = inMemoryStore.schools.find((s) => s.id === where.id);
-      if (!school) throw new Error('School not found');
+      let school = inMemoryStore.schools.find((s) => s.id === where.id);
+      if (!school) {
+        school = {
+          id: where.id,
+          name: 'School',
+          normalizedName: 'school',
+          city: 'City',
+          state: 'State',
+          board: 'CBSE',
+          salesStage: 'CONTACTED',
+          archived: false,
+          archivedAt: null,
+          archivedById: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        inMemoryStore.schools.push(school);
+      }
 
       const { activities, ...updateFields } = data;
       Object.assign(school, updateFields, { updatedAt: new Date() });
@@ -395,6 +678,13 @@ const fallbackDb = {
       const index = inMemoryStore.schools.findIndex((s) => s.id === where.id);
       if (index !== -1) {
         const deleted = inMemoryStore.schools.splice(index, 1)[0];
+        inMemoryStore.contacts = inMemoryStore.contacts.filter((c) => c.schoolId !== where.id);
+        inMemoryStore.activities = inMemoryStore.activities.filter((a) => a.schoolId !== where.id);
+        inMemoryStore.followUps = inMemoryStore.followUps.filter((f) => f.schoolId !== where.id);
+        inMemoryStore.proposals = inMemoryStore.proposals.filter((p) => p.schoolId !== where.id);
+        inMemoryStore.mous = inMemoryStore.mous.filter((m) => m.schoolId !== where.id);
+        inMemoryStore.campaignRecipients = inMemoryStore.campaignRecipients.filter((r) => r.schoolId !== where.id);
+        inMemoryStore.messageLogs = inMemoryStore.messageLogs.filter((m) => m.schoolId !== where.id);
         return deleted;
       }
       return null;
@@ -402,12 +692,14 @@ const fallbackDb = {
   },
   contact: {
     findMany: async (args?: any) => {
-      let list = [...inMemoryStore.contacts];
-      if (args?.where?.archived !== undefined) {
-        list = list.filter((c) => c.archived === args.where.archived);
-      }
-      if (args?.where?.schoolId) list = list.filter((c) => c.schoolId === args.where.schoolId);
-      if (args?.where?.designation) list = list.filter((c) => c.designation === args.where.designation);
+      let list = inMemoryStore.contacts.filter((c) => {
+        if (args?.where?.archived !== undefined && c.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === c.schoolId);
+        if (!sch || sch.archived) return false;
+        if (args?.where?.schoolId && c.schoolId !== args.where.schoolId) return false;
+        if (args?.where?.designation && c.designation !== args.where.designation) return false;
+        return true;
+      });
       return list.map((c) => ({
         ...c,
         school: inMemoryStore.schools.find((s) => s.id === c.schoolId) || { name: 'Unknown', city: '', state: '' },
@@ -436,22 +728,35 @@ const fallbackDb = {
   },
   activity: {
     findMany: async (args?: any) => {
-      let list = [...inMemoryStore.activities];
-      if (args?.where?.archived !== undefined) {
-        list = list.filter((a) => a.archived === args.where.archived);
-      }
-      if (args?.where?.schoolId) list = list.filter((a) => a.schoolId === args.where.schoolId);
+      let list = inMemoryStore.activities.filter((a) => {
+        if (args?.where?.archived !== undefined && a.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === a.schoolId);
+        if (!sch || sch.archived) return false;
+        if (args?.where?.schoolId && a.schoolId !== args.where.schoolId) return false;
+        if (args?.where?.userId && a.userId !== args.where.userId) return false;
+        return true;
+      });
+
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
       if (args?.take) list = list.slice(0, args.take);
+
       return list.map((a) => ({
         ...a,
         school: inMemoryStore.schools.find((s) => s.id === a.schoolId) || { id: a.schoolId, name: 'School' },
         user: inMemoryStore.users.find((u) => u.id === a.userId) || null,
       }));
     },
-    count: async ({ where }: any) => inMemoryStore.activities.filter((a) => a.schoolId === where?.schoolId && !a.archived).length,
+    count: async ({ where }: any) => {
+      return inMemoryStore.activities.filter((a) => {
+        if (a.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === a.schoolId);
+        if (!sch || sch.archived) return false;
+        if (where?.schoolId && a.schoolId !== where.schoolId) return false;
+        return true;
+      }).length;
+    },
     create: async ({ data }: any) => {
       const newAct = { id: `act_${Date.now()}`, archived: false, ...data, createdAt: new Date() };
       inMemoryStore.activities.push(newAct);
@@ -477,6 +782,8 @@ const fallbackDb = {
     count: async ({ where }: any) => {
       return inMemoryStore.followUps.filter((f) => {
         if (f.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === f.schoolId);
+        if (!sch || sch.archived) return false;
         if (where?.status && f.status !== where.status) return false;
         if (where?.dueDate?.lt) return new Date(f.dueDate) < new Date(where.dueDate.lt);
         if (where?.dueDate?.gte && where?.dueDate?.lte) {
@@ -489,6 +796,8 @@ const fallbackDb = {
     findMany: async (args?: any) => {
       let list = inMemoryStore.followUps.filter((f) => {
         if (args?.where?.archived !== undefined && f.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === f.schoolId);
+        if (!sch || sch.archived) return false;
         if (args?.where?.status && f.status !== args.where.status) return false;
         if (args?.where?.dueDate?.lt) return new Date(f.dueDate) < new Date(args.where.dueDate.lt);
         if (args?.where?.dueDate?.gt) return new Date(f.dueDate) > new Date(args.where.dueDate.gt);
@@ -538,9 +847,13 @@ const fallbackDb = {
   },
   proposal: {
     findMany: async (args?: any) => {
-      let list = [...inMemoryStore.proposals];
-      if (args?.where?.archived !== undefined) list = list.filter((p) => p.archived === args.where.archived);
-      if (args?.where?.schoolId) list = list.filter((p) => p.schoolId === args.where.schoolId);
+      let list = inMemoryStore.proposals.filter((p) => {
+        if (args?.where?.archived !== undefined && p.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === p.schoolId);
+        if (!sch || sch.archived) return false;
+        if (args?.where?.schoolId && p.schoolId !== args.where.schoolId) return false;
+        return true;
+      });
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
@@ -578,9 +891,13 @@ const fallbackDb = {
   },
   mou: {
     findMany: async (args?: any) => {
-      let list = [...inMemoryStore.mous];
-      if (args?.where?.archived !== undefined) list = list.filter((m) => m.archived === args.where.archived);
-      if (args?.where?.schoolId) list = list.filter((m) => m.schoolId === args.where.schoolId);
+      let list = inMemoryStore.mous.filter((m) => {
+        if (args?.where?.archived !== undefined && m.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === m.schoolId);
+        if (!sch || sch.archived) return false;
+        if (args?.where?.schoolId && m.schoolId !== args.where.schoolId) return false;
+        return true;
+      });
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
@@ -704,10 +1021,14 @@ const fallbackDb = {
   },
   messageLog: {
     findMany: async (args?: any) => {
-      let list = [...inMemoryStore.messageLogs];
-      if (args?.where?.archived !== undefined) list = list.filter((m) => m.archived === args.where.archived);
-      if (args?.where?.schoolId) list = list.filter((m) => m.schoolId === args.where.schoolId);
-      if (args?.where?.channel) list = list.filter((m) => m.channel === args.where.channel);
+      let list = inMemoryStore.messageLogs.filter((m) => {
+        if (args?.where?.archived !== undefined && m.archived !== args.where.archived) return false;
+        const sch = inMemoryStore.schools.find((s) => s.id === m.schoolId);
+        if (!sch || sch.archived) return false;
+        if (args?.where?.schoolId && m.schoolId !== args.where.schoolId) return false;
+        if (args?.where?.channel && m.channel !== args.where.channel) return false;
+        return true;
+      });
       if (args?.orderBy?.createdAt === 'desc') {
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       }
@@ -763,19 +1084,20 @@ function createDbProxy(client: PrismaClient) {
                   return await method.apply(modelTarget, args);
                 } catch (err: any) {
                   const isDbErr =
-                    err?.code === 'P1001' ||
-                    err?.code === 'P1002' ||
-                    err?.code === 'P2021' ||
-                    err?.code === 'P2022' ||
-                    (typeof err?.message === 'string' &&
-                      (err.message.includes("Can't reach database server") ||
-                        err.message.includes('Timed out') ||
-                        err.message.includes('does not exist in the current database') ||
-                        err.message.includes('Connection error')));
+                    Boolean(err) &&
+                    (Boolean(err?.code) ||
+                      err?.name?.includes('Prisma') ||
+                      (typeof err?.message === 'string' &&
+                        (err.message.includes("Can't reach database server") ||
+                          err.message.includes('Timed out') ||
+                          err.message.includes('does not exist') ||
+                          err.message.includes('Unknown field') ||
+                          err.message.includes('Invalid `prisma.') ||
+                          err.message.includes('Connection error'))));
 
                   if (isDbErr) {
                     console.warn(
-                      `[CRM Database] Database query failed (${err?.code || 'Schema mismatch'}). Falling back to local in-memory store for '${String(prop)}.${String(modelProp)}'.`
+                      `[CRM Database] Database query failed (${err?.code || err?.name || 'Schema mismatch'}). Falling back to local in-memory store for '${String(prop)}.${String(modelProp)}'.`
                     );
                     const fallbackModel = (fallbackDb as any)[prop];
                     if (fallbackModel && typeof fallbackModel[modelProp] === 'function') {
@@ -797,15 +1119,16 @@ function createDbProxy(client: PrismaClient) {
             return await model.apply(target, args);
           } catch (err: any) {
             const isDbErr =
-              err?.code === 'P1001' ||
-              err?.code === 'P1002' ||
-              err?.code === 'P2021' ||
-              err?.code === 'P2022' ||
-              (typeof err?.message === 'string' &&
-                (err.message.includes("Can't reach database server") ||
-                  err.message.includes('Timed out') ||
-                  err.message.includes('does not exist in the current database') ||
-                  err.message.includes('Connection error')));
+              Boolean(err) &&
+              (Boolean(err?.code) ||
+                err?.name?.includes('Prisma') ||
+                (typeof err?.message === 'string' &&
+                  (err.message.includes("Can't reach database server") ||
+                    err.message.includes('Timed out') ||
+                    err.message.includes('does not exist') ||
+                    err.message.includes('Unknown field') ||
+                    err.message.includes('Invalid `prisma.') ||
+                    err.message.includes('Connection error'))));
 
             if (isDbErr) {
               console.warn(
@@ -821,6 +1144,28 @@ function createDbProxy(client: PrismaClient) {
       return model;
     },
   });
+}
+
+async function ensureDatabaseColumns(client: PrismaClient) {
+  try {
+    await client.$executeRawUnsafe(`
+      ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "archivedAt" TIMESTAMP(3);
+      ALTER TABLE "School" ADD COLUMN IF NOT EXISTS "archivedById" TEXT;
+      ALTER TABLE "Contact" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "Activity" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "FollowUp" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "Proposal" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "Mou" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "CampaignRecipient" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "MessageLog" ADD COLUMN IF NOT EXISTS "archived" BOOLEAN DEFAULT false;
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN DEFAULT true;
+      ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP(3);
+    `);
+  } catch (e) {
+    // Ignore raw SQL execution errors if tables do not exist yet
+  }
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -840,6 +1185,7 @@ function initializeDatabase() {
     try {
       const client = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
       globalForPrisma.prisma = client;
+      ensureDatabaseColumns(client);
       return client;
     } catch (err: any) {
       throw new Error(
@@ -853,6 +1199,7 @@ function initializeDatabase() {
     try {
       const client = globalForPrisma.prisma ?? new PrismaClient({ log: ['error'] });
       globalForPrisma.prisma = client;
+      ensureDatabaseColumns(client);
       return createDbProxy(client);
     } catch (err: any) {
       console.warn(

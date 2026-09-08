@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/rbac';
 import { logAuditAction } from '@/lib/audit';
 
 export async function POST(
@@ -9,12 +9,12 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const currentUser = await getCurrentUser();
+    const currentUser = await getAuthenticatedUser();
     if (!currentUser) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const school = await db.school.findUnique({ where: { id } });
+    const school = await (db as any).school.findUnique({ where: { id } });
     if (!school) {
       return NextResponse.json({ error: 'School not found' }, { status: 404 });
     }
@@ -31,13 +31,29 @@ export async function POST(
       );
     }
 
-    // 1. Unarchive School parent record
-    await db.school.update({
-      where: { id },
-      data: {
-        archived: false,
-      },
-    });
+    // 1. Unarchive School parent record with schema fallback
+    try {
+      await (db as any).school.update({
+        where: { id },
+        data: {
+          archived: false,
+          archivedAt: null,
+          archivedById: null,
+        },
+      });
+    } catch (err) {
+      try {
+        await (db as any).school.update({
+          where: { id },
+          data: {
+            archived: false,
+          },
+        });
+      } catch (fallbackErr) {
+        console.error('[Unarchive] Failed to update school unarchived status:', fallbackErr);
+        throw new Error('Failed to restore school status in database.');
+      }
+    }
 
     // 2. Unarchive all child entities belonging to this school safely
     const childEntities = [

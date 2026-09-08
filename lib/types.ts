@@ -38,7 +38,26 @@ export interface UserSession {
   id: string;
   name: string;
   email: string;
+  phone?: string | null;
   role: Role;
+  isActive?: boolean;
+  lastLoginAt?: string | Date | null;
+}
+
+export interface UserListItem {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: Role;
+  isActive: boolean;
+  lastLoginAt?: string | Date | null;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  _count: {
+    assignedSchools: number;
+    followUps: number;
+  };
 }
 
 export const SALES_STAGE_PIPELINE: { key: SalesStage; label: string; color: string; description: string }[] = [

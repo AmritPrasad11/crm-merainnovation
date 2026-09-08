@@ -1,4 +1,4 @@
-import { getCurrentUser } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/rbac';
 import { redirect } from 'next/navigation';
 import { ensureLogoCopied } from '@/app/api/copy-logo/route';
 import DashboardShell from '@/components/DashboardShell';
@@ -12,7 +12,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   ensureLogoCopied();
-  const user = await getCurrentUser();
+  const user = await getAuthenticatedUser();
 
   if (!user) {
     redirect('/login');

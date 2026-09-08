@@ -1,19 +1,22 @@
 import { db } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { getAuthenticatedUser } from '@/lib/rbac';
 import { redirect } from 'next/navigation';
 import UserManagementClient from '@/components/UserManagementClient';
 
 export default async function UsersPage() {
-  const user = await getCurrentUser();
+  const user = await getAuthenticatedUser();
 
   if (!user || user.role !== 'ADMIN') {
     redirect('/dashboard');
   }
 
-  const usersList = await db.user.findMany({
+  const usersList = await (db as any).user.findMany({
     include: {
       _count: {
-        select: { assignedSchools: true, followUps: true },
+        select: {
+          assignedSchools: true,
+          followUps: true,
+        },
       },
     },
     orderBy: { createdAt: 'desc' },

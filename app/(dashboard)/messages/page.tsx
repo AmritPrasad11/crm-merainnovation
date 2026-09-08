@@ -1,6 +1,9 @@
 import { db } from '@/lib/db';
 import MessagesClient from '@/components/MessagesClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function MessagesPage() {
   const messageLogs = await db.messageLog.findMany({
     where: {

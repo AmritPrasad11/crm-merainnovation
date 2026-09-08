@@ -348,3 +348,19 @@ export const Database = (props: any) => (
 export const RotateCcw = (props: any) => (
   <Icon d={['M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8', 'M3 3v5h5']} {...props} />
 );
+
+export const ArrowRightLeft = (props: any) => (
+  <Icon d={['m16 3 4 4-4 4', 'M20 7H4', 'm8 21-4-4 4-4', 'M4 17h16']} {...props} />
+);
+
+export const Edit2 = (props: any) => (
+  <Icon d={['M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z']} {...props} />
+);
+
+export const XCircle = (props: any) => (
+  <Icon d={['M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z', 'm15 9-6 6', 'm9 9 6-6']} {...props} />
+);
+
+export const Eye = (props: any) => (
+  <Icon d={['M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z', 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z']} {...props} />
+);
